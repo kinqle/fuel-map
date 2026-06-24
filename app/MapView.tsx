@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+// фиксим иконки leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -16,44 +17,21 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// тестовые АЗС (потом заменим на реальные)
 const gasStations = [
-  {
-    name: "Лукойл",
-    position: [56.8585, 35.9115],
-    fuel: {
-      ai92: true,
-      ai95: true,
-      diesel: true,
-    },
-    updated: "22.06.2026 22:40",
-  },
-  {
-    name: "Роснефть",
-    position: [56.8466, 35.9034],
-    fuel: {
-      ai92: true,
-      ai95: false,
-      diesel: true,
-    },
-    updated: "22.06.2026 22:35",
-  },
-  {
-    name: "Газпромнефть",
-    position: [56.8728, 35.9210],
-    fuel: {
-      ai92: true,
-      ai95: true,
-      diesel: false,
-    },
-    updated: "22.06.2026 22:31",
-  },
+  { id: "lukoil", name: "Лукойл", position: [56.8585, 35.9115] },
+  { id: "rosneft", name: "Роснефть", position: [56.8466, 35.9034] },
+  { id: "gazprom", name: "Газпромнефть", position: [56.8728, 35.9210] },
 ];
 
-function FlyToUser({
-  position,
-}: {
-  position: [number, number] | null;
-}) {
+type FuelState = {
+  ai92: "yes" | "no" | null;
+  ai95: "yes" | "no" | null;
+  ai98: "yes" | "no" | null;
+  diesel: "yes" | "no" | null;
+};
+
+function FlyToUser({ position }: { position: [number, number] | null }) {
   const map = useMap();
 
   if (position) {
@@ -66,24 +44,44 @@ function FlyToUser({
 export default function MapView() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
+  const [votes, setVotes] = useState<Record<string, FuelState>>(() => {
+    if (typeof window === "undefined") return {};
+    const saved = localStorage.getItem("fuel-votes");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  function saveVotes(newVotes: Record<string, FuelState>) {
+    setVotes(newVotes);
+    localStorage.setItem("fuel-votes", JSON.stringify(newVotes));
+  }
+
   function findMe() {
     navigator.geolocation.getCurrentPosition((pos) => {
-      console.log(
-        "lat:",
-        pos.coords.latitude,
-        "lng:",
-        pos.coords.longitude,
-        "accuracy:",
-        pos.coords.accuracy
-      );
-
       const coords: [number, number] = [
         pos.coords.latitude,
         pos.coords.longitude,
       ];
-
       setUserPos(coords);
     });
+  }
+
+  function updateFuel(stationId: string, fuel: keyof FuelState, value: "yes" | "no") {
+    const current = votes[stationId] || {
+      ai92: null,
+      ai95: null,
+      ai98: null,
+      diesel: null,
+    };
+
+    const updated = {
+      ...votes,
+      [stationId]: {
+        ...current,
+        [fuel]: value,
+      },
+    };
+
+    saveVotes(updated);
   }
 
   return (
@@ -114,50 +112,75 @@ export default function MapView() {
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {gasStations.map((s, i) => (
-          <Marker
-            key={i}
-            position={s.position as [number, number]}
-          >
-            <Popup>
-              <div>
-                <b>{s.name}</b>
+        {gasStations.map((s) => {
+          const state = votes[s.id] || {
+            ai92: null,
+            ai95: null,
+            ai98: null,
+            diesel: null,
+          };
 
-                <br />
-                <br />
+          return (
+            <Marker key={s.id} position={s.position as [number, number]}>
+              <Popup>
+                <div style={{ minWidth: 200 }}>
+                  <b>{s.name}</b>
 
-                АИ-92: {s.fuel.ai92 ? "✅ Есть" : "❌ Нет"}
+                  <hr />
 
-                <br />
+                  {(["ai92", "ai95", "ai98", "diesel"] as const).map((fuel) => (
+                    <div key={fuel} style={{ marginBottom: 8 }}>
+                      <div>{fuel.toUpperCase()}</div>
 
-                АИ-95: {s.fuel.ai95 ? "✅ Есть" : "❌ Нет"}
+                      <button
+                        onClick={() => updateFuel(s.id, fuel, "yes")}
+                        style={{
+                          marginRight: 6,
+                          background: state[fuel] === "yes" ? "green" : "#ddd",
+                          color: state[fuel] === "yes" ? "white" : "black",
+                          padding: "4px 8px",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Есть
+                      </button>
 
-                <br />
+                      <button
+                        onClick={() => updateFuel(s.id, fuel, "no")}
+                        style={{
+                          background: state[fuel] === "no" ? "red" : "#ddd",
+                          color: state[fuel] === "no" ? "white" : "black",
+                          padding: "4px 8px",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Нет
+                      </button>
+                    </div>
+                  ))}
 
-                ДТ: {s.fuel.diesel ? "✅ Есть" : "❌ Нет"}
+                  <hr />
 
-                <br />
-                <br />
-
-                Обновлено:
-                <br />
-                {s.updated}
-
-                <br />
-                <br />
-
-                <button
-                  style={{
-                    padding: "6px 10px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Подтвердить наличие
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+                  <button
+                    onClick={() => console.log(s.name, state)}
+                    style={{
+                      width: "100%",
+                      padding: "6px",
+                      background: "#2563eb",
+                      color: "white",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Отправить
+                  </button>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
         {userPos && (
           <Marker position={userPos}>
