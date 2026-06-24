@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// фиксим иконки leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -17,7 +16,6 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// тестовые АЗС (потом заменим на реальные)
 const gasStations = [
   { id: "lukoil", name: "Лукойл", position: [56.8585, 35.9115] },
   { id: "rosneft", name: "Роснефть", position: [56.8466, 35.9034] },
@@ -27,28 +25,35 @@ const gasStations = [
 type FuelState = {
   ai92: "yes" | "no" | null;
   ai95: "yes" | "no" | null;
-  ai98: "yes" | "no" | null;
   diesel: "yes" | "no" | null;
 };
 
 function FlyToUser({ position }: { position: [number, number] | null }) {
   const map = useMap();
 
-  if (position) {
-    map.flyTo(position, 15);
-  }
+  if (position) map.flyTo(position, 15);
 
   return null;
 }
 
+const defaultFuel = (): FuelState => ({
+  ai92: null,
+  ai95: null,
+  diesel: null,
+});
+
 export default function MapView() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
-  const [votes, setVotes] = useState<Record<string, FuelState>>(() => {
-    if (typeof window === "undefined") return {};
+  const [votes, setVotes] = useState<Record<string, FuelState>>({});
+
+  const [status, setStatus] = useState<string | null>(null);
+
+  // загрузка из localStorage
+  useEffect(() => {
     const saved = localStorage.getItem("fuel-votes");
-    return saved ? JSON.parse(saved) : {};
-  });
+    if (saved) setVotes(JSON.parse(saved));
+  }, []);
 
   function saveVotes(newVotes: Record<string, FuelState>) {
     setVotes(newVotes);
@@ -57,21 +62,16 @@ export default function MapView() {
 
   function findMe() {
     navigator.geolocation.getCurrentPosition((pos) => {
-      const coords: [number, number] = [
-        pos.coords.latitude,
-        pos.coords.longitude,
-      ];
-      setUserPos(coords);
+      setUserPos([pos.coords.latitude, pos.coords.longitude]);
     });
   }
 
-  function updateFuel(stationId: string, fuel: keyof FuelState, value: "yes" | "no") {
-    const current = votes[stationId] || {
-      ai92: null,
-      ai95: null,
-      ai98: null,
-      diesel: null,
-    };
+  function updateFuel(
+    stationId: string,
+    fuel: keyof FuelState,
+    value: "yes" | "no"
+  ) {
+    const current = votes[stationId] || defaultFuel();
 
     const updated = {
       ...votes,
@@ -82,6 +82,14 @@ export default function MapView() {
     };
 
     saveVotes(updated);
+  }
+
+  function submitVote(name: string, state: FuelState) {
+    console.log("SEND:", name, state);
+
+    setStatus(`✔ ${name}: сохранено`);
+
+    setTimeout(() => setStatus(null), 2000);
   }
 
   return (
@@ -113,33 +121,40 @@ export default function MapView() {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         {gasStations.map((s) => {
-          const state = votes[s.id] || {
-            ai92: null,
-            ai95: null,
-            ai98: null,
-            diesel: null,
-          };
+          const state = votes[s.id] || defaultFuel();
 
           return (
             <Marker key={s.id} position={s.position as [number, number]}>
               <Popup>
-                <div style={{ minWidth: 200 }}>
+                <div style={{ minWidth: 220, fontFamily: "Arial" }}>
                   <b>{s.name}</b>
 
                   <hr />
 
-                  {(["ai92", "ai95", "ai98", "diesel"] as const).map((fuel) => (
-                    <div key={fuel} style={{ marginBottom: 8 }}>
-                      <div>{fuel.toUpperCase()}</div>
+                  {/* топливо */}
+                  {[
+                    ["ai92", "АИ-92"],
+                    ["ai95", "АИ-95"],
+                    ["diesel", "ДТ"],
+                  ].map(([key, label]) => (
+                    <div key={key} style={{ marginBottom: 10 }}>
+                      <div style={{ fontWeight: 600 }}>{label}</div>
 
                       <button
-                        onClick={() => updateFuel(s.id, fuel, "yes")}
+                        onClick={() =>
+                          updateFuel(s.id, key as keyof FuelState, "yes")
+                        }
                         style={{
                           marginRight: 6,
-                          background: state[fuel] === "yes" ? "green" : "#ddd",
-                          color: state[fuel] === "yes" ? "white" : "black",
-                          padding: "4px 8px",
+                          background: state[key as keyof FuelState] === "yes"
+                            ? "green"
+                            : "#ddd",
+                          color:
+                            state[key as keyof FuelState] === "yes"
+                              ? "white"
+                              : "black",
                           border: "none",
+                          padding: "4px 8px",
                           cursor: "pointer",
                         }}
                       >
@@ -147,12 +162,20 @@ export default function MapView() {
                       </button>
 
                       <button
-                        onClick={() => updateFuel(s.id, fuel, "no")}
+                        onClick={() =>
+                          updateFuel(s.id, key as keyof FuelState, "no")
+                        }
                         style={{
-                          background: state[fuel] === "no" ? "red" : "#ddd",
-                          color: state[fuel] === "no" ? "white" : "black",
-                          padding: "4px 8px",
+                          background:
+                            state[key as keyof FuelState] === "no"
+                              ? "red"
+                              : "#ddd",
+                          color:
+                            state[key as keyof FuelState] === "no"
+                              ? "white"
+                              : "black",
                           border: "none",
+                          padding: "4px 8px",
                           cursor: "pointer",
                         }}
                       >
@@ -164,10 +187,10 @@ export default function MapView() {
                   <hr />
 
                   <button
-                    onClick={() => console.log(s.name, state)}
+                    onClick={() => submitVote(s.name, state)}
                     style={{
                       width: "100%",
-                      padding: "6px",
+                      padding: "8px",
                       background: "#2563eb",
                       color: "white",
                       border: "none",
@@ -176,6 +199,12 @@ export default function MapView() {
                   >
                     Отправить
                   </button>
+
+                  {status && (
+                    <div style={{ marginTop: 8, color: "green" }}>
+                      {status}
+                    </div>
+                  )}
                 </div>
               </Popup>
             </Marker>
