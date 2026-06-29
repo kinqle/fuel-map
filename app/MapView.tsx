@@ -433,13 +433,16 @@ export default function MapView() {
           onSelectCity={(c) => setCity(c)}
           onOpenMyStations={() => setShowMyStations(true)}
           onOpenLevel={() => setShowLevel(true)}
-          onNavigateTo={(lat, lng) => {
-            if (mapRef.current) mapRef.current.flyTo([lat, lng], 13, { animate: true, duration: 1 });
-            // Переключаем на ближайший город чтобы загрузились нужные станции
+          onNavigateTo={(_lat, _lng, _label, state) => {
+            if (mapRef.current) mapRef.current.flyTo([_lat, _lng], 13, { animate: true, duration: 1 });
+            // Matчим по имени региона из Nominatim — точнее центроида
+            const byState = state
+              ? cities.find(c => c.name === state || state.includes(c.name) || c.name.includes(state))
+              : null;
             const nearest = cities.reduce((best, c) =>
-              haversineKm([lat, lng], c.position) < haversineKm([lat, lng], best.position) ? c : best
+              haversineKm([_lat, _lng], c.position) < haversineKm([_lat, _lng], best.position) ? c : best
             );
-            setCity(nearest);
+            setCity(byState ?? nearest);
           }}
         />
         {/* Строка: Фильтры слева, Поддержать справа */}

@@ -20,13 +20,13 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   onSelectCity:     (city: City) => void;
   onOpenMyStations: () => void;
   onOpenLevel:      () => void;
-  onNavigateTo:     (lat: number, lng: number, label: string) => void;
+  onNavigateTo:     (lat: number, lng: number, label: string, state?: string) => void;
 }) {
   const [query,     setQuery]     = useState("");
   const [open,      setOpen]      = useState(false);
   const [focused,   setFocused]   = useState(-1);
   const [isFocused, setIsFocused] = useState(false);
-  const [geoResult, setGeoResult] = useState<{ name: string; lat: number; lng: number } | null>(null);
+  const [geoResult, setGeoResult] = useState<{ name: string; lat: number; lng: number; state?: string } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const geoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,7 +57,11 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
         // Берём только населённые пункты, не магазины и POI
         const PLACE_TYPES = ["city", "town", "village", "municipality", "administrative", "suburb", "district", "county"];
         const place = data.find((d: {type: string}) => PLACE_TYPES.includes(d.type)) ?? null;
-        if (place) setGeoResult({ name: place.display_name.split(",")[0], lat: parseFloat(place.lat), lng: parseFloat(place.lon) });
+        if (place) {
+          const addr = place.address || {};
+          const state = addr.state || addr.county || undefined;
+          setGeoResult({ name: place.display_name.split(",")[0], lat: parseFloat(place.lat), lng: parseFloat(place.lon), state });
+        }
         else setGeoResult(null);
       } catch { setGeoResult(null); }
       setGeoLoading(false);
@@ -332,7 +336,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
                   {!geoLoading && geoResult && (
                     <button
                       onMouseDown={() => {
-                        onNavigateTo(geoResult.lat, geoResult.lng, geoResult.name);
+                        onNavigateTo(geoResult.lat, geoResult.lng, geoResult.name, geoResult.state);
                         setQuery(""); setOpen(false);
                       }}
                       style={{
@@ -345,7 +349,9 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
                       <span style={{ fontSize: 22 }}>📍</span>
                       <div>
                         <div style={{ color: tk.text, fontSize: 13, fontWeight: 700 }}>Перейти к «{geoResult.name}»</div>
-                        <div style={{ color: tk.textSub, fontSize: 11, marginTop: 2 }}>Открыть на карте</div>
+                        <div style={{ color: tk.textSub, fontSize: 11, marginTop: 2 }}>
+                          {geoResult.state ?? "Открыть на карте"}
+                        </div>
                       </div>
                     </button>
                   )}
