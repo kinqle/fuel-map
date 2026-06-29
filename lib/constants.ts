@@ -1,16 +1,17 @@
 import type { Theme, FuelId, MarkerStatus, FuelVotes, Filters, City } from "./types";
 
 export const CITIES_FALLBACK: City[] = [
-  { id: "tver",        name: "Тверь",           position: [56.8587, 35.9176] },
-  { id: "moscow",      name: "Москва",          position: [55.7558, 37.6176] },
-  { id: "spb",         name: "Санкт-Петербург", position: [59.9311, 30.3609] },
-  { id: "ekb",         name: "Екатеринбург",    position: [56.8389, 60.6057] },
-  { id: "nsk",         name: "Новосибирск",     position: [54.9885, 82.9207] },
-  { id: "kazan",       name: "Казань",          position: [55.8304, 49.0661] },
-  { id: "krasnodar",   name: "Краснодар",       position: [45.0355, 38.9753] },
-  { id: "samara",      name: "Самара",          position: [53.2001, 50.1500] },
-  { id: "ufa",         name: "Уфа",            position: [54.7388, 55.9721] },
-  { id: "chelyabinsk", name: "Челябинск",       position: [55.1644, 61.4368] },
+  { id: "tver",        name: "Тверь",              position: [56.8587, 35.9176] },
+  { id: "moscow",      name: "Москва",             position: [55.7558, 37.6176] },
+  { id: "mo",          name: "Московская область", position: [55.8200, 37.9000] },
+  { id: "spb",         name: "Санкт-Петербург",    position: [59.9311, 30.3609] },
+  { id: "ekb",         name: "Екатеринбург",       position: [56.8389, 60.6057] },
+  { id: "nsk",         name: "Новосибирск",        position: [54.9885, 82.9207] },
+  { id: "kazan",       name: "Казань",             position: [55.8304, 49.0661] },
+  { id: "krasnodar",   name: "Краснодар",          position: [45.0355, 38.9753] },
+  { id: "samara",      name: "Самара",             position: [53.2001, 50.1500] },
+  { id: "ufa",         name: "Уфа",               position: [54.7388, 55.9721] },
+  { id: "chelyabinsk", name: "Челябинск",          position: [55.1644, 61.4368] },
 ];
 
 export const FUELS: { id: FuelId; label: string; color: string }[] = [
