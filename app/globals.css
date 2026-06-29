@@ -22,5 +22,180 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overscroll-behavior: none;
+}
+
+/* ─── Mobile touch resets ─────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+/* Prevent iOS font size bump on input focus */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Hide scrollbars on mobile panel */
+.fm-panel-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.fm-panel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Cluster markers ─────────────────────────────────────────────────────── */
+
+.fm-cluster {
+  position: relative;
+  cursor: pointer;
+}
+
+.fm-cluster__body {
+  width: var(--cl-sz);
+  height: var(--cl-sz);
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease;
+}
+
+.fm-cluster:hover .fm-cluster__body {
+  transform: scale(1.12);
+  box-shadow: 0 6px 28px rgba(99, 102, 241, 0.65),
+              0 0 0 8px rgba(99, 102, 241, 0.15);
+}
+
+.fm-cluster__count {
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.fm-cluster__ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(99, 102, 241, 0.45);
+  animation: fm-cluster-ring 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fm-cluster-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.65); opacity: 0;  }
+}
+
+/* Smoother merge/explode animation (overrides leaflet default) */
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.25s ease-in !important;
+}
+
+/* ─── Pin markers ─────────────────────────────────────────────────────────── */
+
+.fm-pin {
+  position: relative;
+  cursor: pointer;
+  animation: fm-pin-appear 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes fm-pin-appear {
+  from { transform: scale(0) translateY(12px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);    opacity: 1; }
+}
+
+.fm-pin svg {
+  display: block;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.2s ease;
+}
+
+.fm-pin:hover svg {
+  transform: scale(1.1) translateY(-3px);
+}
+
+.fm-pin--selected svg {
+  transform: scale(1.18) translateY(-4px);
+  filter: drop-shadow(0 0 14px var(--glow, rgba(0,0,0,0.4)));
+}
+
+.fm-pin svg:active {
+  transform: scale(0.92) !important;
+  transition-duration: 0.07s !important;
+}
+
+/* Pulse ring — anchored to circular head of the pin */
+.fm-pin__ring {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--pc);
+  animation: fm-pin-ring 1.9s ease-out infinite;
+  pointer-events: none;
+}
+
+.fm-pin--selected .fm-pin__ring {
+  width: 44px;
+  height: 44px;
+  top: 2px;
+  border-color: var(--pc);
+  opacity: 0.8;
+}
+
+.fm-pin--recommended .fm-pin__ring {
+  border-color: #fbbf24;
+  animation-duration: 1.6s;
+}
+
+@keyframes fm-pin-ring {
+  0%   { transform: translateX(-50%) scale(1);   opacity: 0.65; }
+  100% { transform: translateX(-50%) scale(2.0); opacity: 0;    }
+}
+
+.fm-pin__crown {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  font-size: 14px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.65));
+  pointer-events: none;
+  animation: crownPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes crownPop {
+  from { transform: scale(0) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+
+/* ─── User location marker ────────────────────────────────────────────────── */
+
+.fm-pulse {
+  animation: userPulse 2s ease-out infinite;
+}
+
+@keyframes userPulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(3.5); opacity: 0;   }
 }
