@@ -43,12 +43,12 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   const stResults   = q ? stations.filter(s => startsWithQ(s.name) || startsWithQ(s.brand)) : [];
   const cityResults = q ? cities.filter(c => startsWithQ(c.name)) : [];
 
-  // Геокодинг через Nominatim — только города/районы, минимум 3 символа
-  const noLocal = q.length >= 3 && stResults.length === 0 && cityResults.length === 0;
-  // isSearching = noLocal && результат ещё не готов для текущего q (без useState-задержки)
+  // Геокодинг через Nominatim — только города/районы, минимум 2 символа
+  const noLocal = q.length >= 2 && stResults.length === 0 && cityResults.length === 0;
+  // isSearching вычисляется синхронно — нет задержки useEffect
   const isSearching = noLocal && geoQuery !== q;
   useEffect(() => {
-    if (!noLocal) { setGeoResult(null); return; }
+    if (!noLocal) { setGeoResult(null); setGeoQuery(""); return; }
     if (geoTimer.current) clearTimeout(geoTimer.current);
     geoTimer.current = setTimeout(async () => {
       try {
@@ -65,8 +65,8 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
           setGeoResult(null);
         }
       } catch { setGeoResult(null); }
-      setGeoQuery(q); // помечаем что поиск для этого q завершён
-    }, 600);
+      setGeoQuery(q);
+    }, 350);
   }, [q, noLocal]);
 
   type Item = { kind: "station"; station: Station } | { kind: "city"; city: City };
