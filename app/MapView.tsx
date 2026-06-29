@@ -170,7 +170,10 @@ export default function MapView() {
       if (data && data.length > 0) {
         const mapped = (data as Array<{ id: string; name: string; lat: number; lng: number }>)
           .map(r => ({ id: r.id, name: r.name, position: [r.lat, r.lng] as [number, number] }));
-        setCities(mapped);
+        // Добавляем из CITIES_FALLBACK всё что нет в БД (например "mo" = Московская область)
+        const dbIds = new Set(mapped.map(c => c.id));
+        const extras = CITIES_FALLBACK.filter(c => !dbIds.has(c.id));
+        setCities([...mapped, ...extras]);
         setCity(mapped[0]);
       }
     });
@@ -437,7 +440,11 @@ export default function MapView() {
             if (mapRef.current) mapRef.current.flyTo([_lat, _lng], 13, { animate: true, duration: 1 });
             // Matчим по имени региона из Nominatim — точнее центроида
             const byState = state
-              ? cities.find(c => c.name === state || state.includes(c.name) || c.name.includes(state))
+              ? cities.find(c => {
+                  const s = state.trim().toLowerCase();
+                  const n = c.name.trim().toLowerCase();
+                  return s === n || s.includes(n) || n.includes(s);
+                })
               : null;
             const nearest = cities.reduce((best, c) =>
               haversineKm([_lat, _lng], c.position) < haversineKm([_lat, _lng], best.position) ? c : best

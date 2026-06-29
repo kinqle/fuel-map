@@ -27,7 +27,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   const [focused,   setFocused]   = useState(-1);
   const [isFocused, setIsFocused] = useState(false);
   const [geoResult, setGeoResult] = useState<{ name: string; lat: number; lng: number; state?: string } | null>(null);
-  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoQuery,  setGeoQuery]  = useState<string>(""); // q для которого результат готов
   const geoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const tk = T[theme];
@@ -45,27 +45,28 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
 
   // Геокодинг через Nominatim — только города/районы, минимум 3 символа
   const noLocal = q.length >= 3 && stResults.length === 0 && cityResults.length === 0;
+  // isSearching = noLocal && результат ещё не готов для текущего q (без useState-задержки)
+  const isSearching = noLocal && geoQuery !== q;
   useEffect(() => {
-    if (!noLocal) { setGeoResult(null); setGeoLoading(false); return; }
+    if (!noLocal) { setGeoResult(null); return; }
     if (geoTimer.current) clearTimeout(geoTimer.current);
-    setGeoLoading(true);
     geoTimer.current = setTimeout(async () => {
       try {
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=ru&accept-language=ru&addressdetails=1`;
         const res = await fetch(url, { headers: { "User-Agent": "BenzOK/1.0" } });
         const data = await res.json();
-        // Берём только населённые пункты, не магазины и POI
         const PLACE_TYPES = ["city", "town", "village", "municipality", "administrative", "suburb", "district", "county"];
         const place = data.find((d: {type: string}) => PLACE_TYPES.includes(d.type)) ?? null;
         if (place) {
           const addr = place.address || {};
-          const state = addr.state || addr.county || undefined;
+          const state = addr.state || addr.region || addr.county || undefined;
           setGeoResult({ name: place.display_name.split(",")[0], lat: parseFloat(place.lat), lng: parseFloat(place.lon), state });
+        } else {
+          setGeoResult(null);
         }
-        else setGeoResult(null);
       } catch { setGeoResult(null); }
-      setGeoLoading(false);
-    }, 700);
+      setGeoQuery(q); // помечаем что поиск для этого q завершён
+    }, 600);
   }, [q, noLocal]);
 
   type Item = { kind: "station"; station: Station } | { kind: "city"; city: City };
@@ -330,10 +331,9 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
 
               {q && items.length === 0 && (
                 <div style={{ padding: "16px" }}>
-                  {geoLoading && (
+                  {isSearching ? (
                     <div style={{ color: tk.textSub, fontSize: 13, textAlign: "center" }}>🔍 Ищем на карте…</div>
-                  )}
-                  {!geoLoading && geoResult && (
+                  ) : geoResult ? (
                     <button
                       onMouseDown={() => {
                         onNavigateTo(geoResult.lat, geoResult.lng, geoResult.name, geoResult.state);
@@ -354,8 +354,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
                         </div>
                       </div>
                     </button>
-                  )}
-                  {!geoLoading && !geoResult && (
+                  ) : (
                     <div style={{ color: tk.textSub, fontSize: 13, textAlign: "center" }}>
                       По запросу «{query}» ничего не найдено
                     </div>
