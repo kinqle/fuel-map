@@ -184,7 +184,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
         onMouseDown={(e) => { e.preventDefault(); onOpenLevel(); }}
         style={{
           display: "flex", alignItems: "center", gap: 8,
-          padding: "9px 14px",
+          padding: isMobile ? "7px 12px" : "9px 14px",
           background: tk.ctrl,
           backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
           border: `1.5px solid rgba(99,102,241,0.35)`,
