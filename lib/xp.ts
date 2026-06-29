@@ -3,7 +3,7 @@
 export const XP_PER_VOTE       = 20;  // первый голос на заправке (новая сессия)
 export const XP_PER_VOTE_EXTRA = 3;   // последующие виды топлива на той же заправке в той же сессии
 export const COOLDOWN_MS       = 8 * 60 * 60 * 1000; // 8 часов кулдаун на конкретный вид топлива
-export const SESSION_MS        = 60 * 60 * 1000;     // 1 час — окно «одного визита» на заправку
+export const SESSION_MS        = 30 * 60 * 1000;     // 30 минут — окно «одного визита» на заправку
 export const MAX_LEVEL         = 50;
 
 // Имена всех 50 уровней

@@ -46,7 +46,7 @@ export default function MapView() {
   const [showLevel,      setShowLevel]      = useState(false);
   const [showTgBanner,   setShowTgBanner]   = useState(false);
   // Данные для анимации XP после голосования
-  const [voteAnim,     setVoteAnim]     = useState<{ xpGained: number; newXp: number } | null>(null);
+  const [voteAnim,     setVoteAnim]     = useState<{ xpGained: number; newXp: number; alreadyEarned: boolean } | null>(null);
   // Модальное окно повышения уровня
   const [levelUpModal, setLevelUpModal] = useState<number | null>(null);
   // Текущий уровень для бейджа в SideControls
@@ -297,7 +297,7 @@ export default function MapView() {
       // Начисляем XP и показываем анимацию благодарности
       const xpResult = awardVoteXp(selId, fuel);
       setUserLevel(levelFromXp(xpResult.newXp));
-      setVoteAnim({ xpGained: xpResult.xpGained, newXp: xpResult.newXp });
+      setVoteAnim({ xpGained: xpResult.xpGained, newXp: xpResult.newXp, alreadyEarned: xpResult.alreadyEarned });
       // Показываем модалку левел-апа после исчезновения VoteAnimation
       if (xpResult.newLevel > xpResult.oldLevel) {
         setTimeout(() => setLevelUpModal(xpResult.newLevel), 3200);
@@ -578,9 +578,10 @@ export default function MapView() {
       <AnimatePresence>
         {voteAnim && (
           <VoteAnimation
-            key={String(voteAnim.newXp)}
+            key={String(voteAnim.newXp) + String(voteAnim.alreadyEarned)}
             xpGained={voteAnim.xpGained}
             newXp={voteAnim.newXp}
+            alreadyEarned={voteAnim.alreadyEarned}
             theme={theme}
             onDone={() => setVoteAnim(null)}
           />

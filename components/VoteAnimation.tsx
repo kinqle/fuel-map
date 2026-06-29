@@ -15,11 +15,12 @@ const PARTICLES = [
   { id: 7, dx:  70, emoji: "💫", delay: 0.36 },
 ];
 
-export function VoteAnimation({ xpGained, newXp, theme, onDone }: {
-  xpGained: number;
-  newXp:    number;
-  theme:    Theme;
-  onDone:   () => void;
+export function VoteAnimation({ xpGained, newXp, theme, onDone, alreadyEarned }: {
+  xpGained:      number;
+  newXp:         number;
+  theme:         Theme;
+  onDone:        () => void;
+  alreadyEarned?: boolean;
 }) {
   const tk = T[theme];
 
@@ -81,8 +82,17 @@ export function VoteAnimation({ xpGained, newXp, theme, onDone }: {
           Вы помогаете другим водителям<br />найти топливо
         </div>
 
-        {/* Плашка с XP */}
-        {xpGained > 0 && (
+        {/* Плашка с XP или сообщение об уже начисленных очках */}
+        {alreadyEarned ? (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+            style={{ fontSize: 12, color: tk.textSub, lineHeight: 1.4 }}
+          >
+            Очки на этой заправке уже получены
+          </motion.div>
+        ) : xpGained > 0 ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.55, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -97,7 +107,7 @@ export function VoteAnimation({ xpGained, newXp, theme, onDone }: {
           >
             ⚡ +{xpGained} XP
           </motion.div>
-        )}
+        ) : null}
       </motion.div>
     </div>
   );
