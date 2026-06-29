@@ -372,7 +372,7 @@ export default function MapView() {
           stations={filteredStations} selectedId={selId} recommendedId={recommendedId}
           hoveredId={hoveredId} onSelect={selectStation} userPos={userPos} votes={votes}
         />
-        <MapClickHandler onMapClick={() => { setSelId(null); setShowMyStations(false); setShowAbout(false); }} />
+        <MapClickHandler onMapClick={() => { setSelId(null); setShowMyStations(false); setShowAbout(false); setShowLevel(false); }} />
         <MapMoveHandler onMove={recalc} />
         <CityFlyTo city={city} />
       </MapContainer>
