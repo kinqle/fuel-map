@@ -39,6 +39,7 @@ export default function MapView() {
   const [recentVotes,    setRecentVotes]    = useState<RecentMap>({});
   const [voting,         setVoting]         = useState(false);
   const [userPos,        setUserPos]        = useState<[number, number] | null>(null);
+  const userPosRef = useRef<[number, number] | null>(null);
   const [favorites,      setFavorites]      = useState<Set<string>>(new Set());
   const [showMyStations, setShowMyStations] = useState(false);
   const [showAbout,      setShowAbout]      = useState(false);
@@ -268,17 +269,16 @@ export default function MapView() {
     if (voting || !selId) return;
 
     // Гео-проверка: голосование только в радиусе 2 км от заправки
-    const targetStation = stationsRef.current.find(s => s.id === selId);
-    if (!userPos) {
+    if (!userPosRef.current) {
       toast.error("Включите геолокацию — нам нужно убедиться, что вы рядом с заправкой", { duration: 4000 });
       return;
     }
-    if (targetStation) {
-      const dist = haversineKm(userPos, targetStation.position);
-      if (dist > 2) {
-        toast.error(`Вы слишком далеко от заправки (${formatDist(dist)}). Подъедьте ближе 🚗`, { duration: 4000 });
-        return;
-      }
+    const targetStation = stationsRef.current.find(s => s.id === selId);
+    if (!targetStation) return;
+    const dist = haversineKm(userPosRef.current, targetStation.position);
+    if (dist > 2) {
+      toast.error(`Вы слишком далеко от заправки (${formatDist(dist)}). Подъедьте ближе 🚗`, { duration: 4000 });
+      return;
     }
 
     const myId = getDeviceId();
@@ -328,6 +328,7 @@ export default function MapView() {
 
   const applyPosition = useCallback((lat: number, lng: number) => {
     const pos: [number, number] = [lat, lng];
+    userPosRef.current = pos;
     setUserPos(pos);
     const cityList = cities.length > 0 ? cities : CITIES_FALLBACK;
     const nearest = cityList.reduce((best: City, c: City) =>
