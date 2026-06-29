@@ -24,6 +24,10 @@ import { StationList } from "../components/StationList";
 import { StationSheet } from "../components/StationSheet";
 import { MyStationsScreen } from "../components/MyStationsScreen";
 import { AboutScreen } from "../components/AboutScreen";
+import { LevelScreen } from "../components/LevelScreen";
+import { VoteAnimation } from "../components/VoteAnimation";
+import { awardVoteXp, getUserXpData } from "../lib/userProfile";
+import { levelFromXp } from "../lib/xp";
 
 export default function MapView() {
   const [theme,          setTheme]          = useState<Theme>("dark");
@@ -37,7 +41,12 @@ export default function MapView() {
   const [favorites,      setFavorites]      = useState<Set<string>>(new Set());
   const [showMyStations, setShowMyStations] = useState(false);
   const [showAbout,      setShowAbout]      = useState(false);
+  const [showLevel,      setShowLevel]      = useState(false);
   const [showTgBanner,   setShowTgBanner]   = useState(false);
+  // Данные для анимации после голосования: null = скрыта
+  const [voteAnim, setVoteAnim] = useState<{ xpGained: number; levelUp: number | null; newXp: number } | null>(null);
+  // Текущий уровень для бейджа в SideControls
+  const [userLevel, setUserLevel] = useState(() => levelFromXp(getUserXpData().xp));
   const [recommendedId,  setRecommendedId]  = useState<string | null>(null);
   const [filters,        setFilters]        = useState<Filters>(DEFAULT_FILTERS);
   const [hoveredId,      setHoveredId]      = useState<string | null>(null);
@@ -260,6 +269,14 @@ export default function MapView() {
       console.error("Vote error:", error);
       toast.error(`Ошибка сохранения: ${error.message}`);
     } else {
+      // Начисляем XP и показываем анимацию благодарности
+      const xpResult = awardVoteXp(selId, fuel);
+      setUserLevel(levelFromXp(xpResult.newXp));
+      setVoteAnim({
+        xpGained: xpResult.xpGained,
+        levelUp:  xpResult.newLevel > xpResult.oldLevel ? xpResult.newLevel : null,
+        newXp:    xpResult.newXp,
+      });
       const fl = FUELS.find((f) => f.id === fuel)?.label;
       toast.success(`${fl}: ${value === "yes" ? "есть ✓" : "нет ✗"}`, { duration: 2000 });
       const nowIso = new Date().toISOString();
@@ -381,6 +398,7 @@ export default function MapView() {
       <SideControls
         theme={theme} onToggleTheme={toggleTheme}
         onLocate={handleLocate} mapRef={mapRef} isMobile={isMobile}
+        onOpenLevel={() => setShowLevel(true)} userLevel={userLevel}
       />
 
       {(!isMobile || !selStation) && (
@@ -424,6 +442,26 @@ export default function MapView() {
       <AnimatePresence>
         {showAbout && (
           <AboutScreen theme={theme} isMobile={isMobile} onClose={() => setShowAbout(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showLevel && (
+          <LevelScreen theme={theme} isMobile={isMobile} onClose={() => setShowLevel(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Анимация благодарности после голосования */}
+      <AnimatePresence>
+        {voteAnim && (
+          <VoteAnimation
+            key={String(voteAnim.newXp)}
+            xpGained={voteAnim.xpGained}
+            levelUp={voteAnim.levelUp}
+            newXp={voteAnim.newXp}
+            theme={theme}
+            onDone={() => setVoteAnim(null)}
+          />
         )}
       </AnimatePresence>
 

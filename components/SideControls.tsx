@@ -4,12 +4,14 @@ import L from "leaflet";
 import type { Theme } from "../lib/types";
 import { T } from "../lib/constants";
 
-export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile }: {
+export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile, onOpenLevel, userLevel }: {
   theme:         Theme;
   onToggleTheme: () => void;
   onLocate:      () => void;
   mapRef:        React.RefObject<L.Map | null>;
   isMobile:      boolean;
+  onOpenLevel:   () => void;
+  userLevel:     number;
 }) {
   const tk  = T[theme];
   const sz  = isMobile ? 48 : 42;
@@ -76,6 +78,29 @@ export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile 
         onClick={onToggleTheme}
         onMouseEnter={onHover} onMouseLeave={onLeave}>
         {theme === "dark" ? "☀️" : "🌙"}
+      </button>
+      {divider}
+      {/* Кнопка открытия экрана уровня */}
+      <button
+        style={{ ...btn, position: "relative" }}
+        title={`Мой уровень (${userLevel})`}
+        onClick={onOpenLevel}
+        onMouseEnter={onHover} onMouseLeave={onLeave}
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
+        </svg>
+        {/* Маленький бейдж с номером уровня */}
+        <span style={{
+          position: "absolute", top: 4, right: 4,
+          minWidth: 14, height: 14, borderRadius: 7,
+          background: "#6366f1", color: "#fff",
+          fontSize: 9, fontWeight: 800,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          lineHeight: 1, padding: "0 2px",
+        }}>
+          {userLevel}
+        </span>
       </button>
     </div>
   );
