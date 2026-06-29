@@ -400,6 +400,7 @@ export default function MapView() {
       <SideControls
         theme={theme} onToggleTheme={toggleTheme}
         onLocate={handleLocate} mapRef={mapRef} isMobile={isMobile}
+        onOpenAbout={() => setShowAbout(true)}
       />
 
       {(!isMobile || !selStation) && (
