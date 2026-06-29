@@ -1,12 +1,12 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Station, City, VotesMap, FuelVotes, Theme } from "../lib/types";
 import { T, STATUS_COLORS, STATUS_META } from "../lib/constants";
 import { getStationStatus } from "../lib/votes";
 import { haversineKm, formatDist } from "../lib/utils";
 
-export function SearchBar({ stations, cities, votes, userPos, theme, selectedCity, favCount, isMobile, userLevel, onSelectStation, onSelectCity, onOpenMyStations, onOpenLevel }: {
+export function SearchBar({ stations, cities, votes, userPos, theme, selectedCity, favCount, isMobile, userLevel, onSelectStation, onSelectCity, onOpenMyStations, onOpenLevel, onNavigateTo }: {
   stations:         Station[];
   cities:           City[];
   votes:            VotesMap;
@@ -20,11 +20,15 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   onSelectCity:     (city: City) => void;
   onOpenMyStations: () => void;
   onOpenLevel:      () => void;
+  onNavigateTo:     (lat: number, lng: number, label: string) => void;
 }) {
   const [query,     setQuery]     = useState("");
   const [open,      setOpen]      = useState(false);
   const [focused,   setFocused]   = useState(-1);
   const [isFocused, setIsFocused] = useState(false);
+  const [geoResult, setGeoResult] = useState<{ name: string; lat: number; lng: number } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const geoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const tk = T[theme];
   const q  = query.trim().toLowerCase();
@@ -38,6 +42,24 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
 
   const stResults   = q ? stations.filter(s => startsWithQ(s.name) || startsWithQ(s.brand)) : [];
   const cityResults = q ? cities.filter(c => startsWithQ(c.name)) : [];
+
+  // Геокодинг через Nominatim когда нет локальных результатов
+  const noLocal = q.length >= 2 && stResults.length === 0 && cityResults.length === 0;
+  useEffect(() => {
+    if (!noLocal) { setGeoResult(null); return; }
+    if (geoTimer.current) clearTimeout(geoTimer.current);
+    setGeoLoading(true);
+    geoTimer.current = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + " Россия")}&format=json&limit=1&accept-language=ru`;
+        const res = await fetch(url, { headers: { "User-Agent": "BenzOK/1.0" } });
+        const data = await res.json();
+        if (data[0]) setGeoResult({ name: data[0].display_name.split(",")[0], lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        else setGeoResult(null);
+      } catch { setGeoResult(null); }
+      setGeoLoading(false);
+    }, 600);
+  }, [q, noLocal]);
 
   type Item = { kind: "station"; station: Station } | { kind: "city"; city: City };
   const items: Item[] = [
@@ -300,8 +322,35 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
               )}
 
               {q && items.length === 0 && (
-                <div style={{ padding: "28px 16px", textAlign: "center", color: tk.textSub, fontSize: 13 }}>
-                  По запросу «{query}» ничего не найдено
+                <div style={{ padding: "16px" }}>
+                  {geoLoading && (
+                    <div style={{ color: tk.textSub, fontSize: 13, textAlign: "center" }}>🔍 Ищем на карте…</div>
+                  )}
+                  {!geoLoading && geoResult && (
+                    <button
+                      onMouseDown={() => {
+                        onNavigateTo(geoResult.lat, geoResult.lng, geoResult.name);
+                        setQuery(""); setOpen(false);
+                      }}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", gap: 12,
+                        padding: "10px 12px", borderRadius: 12, border: "none", cursor: "pointer",
+                        background: "rgba(99,102,241,0.10)", transition: "background 0.12s",
+                        textAlign: "left",
+                      }}
+                    >
+                      <span style={{ fontSize: 22 }}>📍</span>
+                      <div>
+                        <div style={{ color: tk.text, fontSize: 13, fontWeight: 700 }}>Перейти к «{geoResult.name}»</div>
+                        <div style={{ color: tk.textSub, fontSize: 11, marginTop: 2 }}>Открыть на карте</div>
+                      </div>
+                    </button>
+                  )}
+                  {!geoLoading && !geoResult && (
+                    <div style={{ color: tk.textSub, fontSize: 13, textAlign: "center" }}>
+                      По запросу «{query}» ничего не найдено
+                    </div>
+                  )}
                 </div>
               )}
             </>

@@ -433,6 +433,9 @@ export default function MapView() {
           onSelectCity={(c) => setCity(c)}
           onOpenMyStations={() => setShowMyStations(true)}
           onOpenLevel={() => setShowLevel(true)}
+          onNavigateTo={(lat, lng) => {
+            if (mapRef.current) mapRef.current.flyTo([lat, lng], 13, { animate: true, duration: 1 });
+          }}
         />
         {/* Строка: Фильтры слева, Поддержать справа */}
         <div style={{
