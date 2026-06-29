@@ -40,8 +40,19 @@ export default function RootLayout({
     <html
       lang="ru"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      style={{ background: "#0a0a0a" }}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        {/* Устанавливаем фон до первого рендера — предотвращает белые зазоры */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            var t = localStorage.getItem('theme') || 'dark';
+            var bg = t === 'dark' ? '#0a0a0a' : '#ffffff';
+            document.documentElement.style.background = bg;
+          } catch(e) {}
+        `}} />
+      </head>
+      <body className="min-h-full flex flex-col" style={{ background: "#0a0a0a" }}>{children}</body>
     </html>
   );
 }
