@@ -52,15 +52,19 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
     if (geoTimer.current) clearTimeout(geoTimer.current);
     geoTimer.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=ru&accept-language=ru&addressdetails=1`;
-        const res = await fetch(url, { headers: { "User-Agent": "BenzOK/1.0" } });
+        // Photon поддерживает префиксный поиск (автокомплит), Nominatim — нет
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lat=55.75&lon=37.62`;
+        const res = await fetch(url);
         const data = await res.json();
-        const PLACE_TYPES = ["city", "town", "village", "municipality", "administrative", "suburb", "district", "county"];
-        const place = data.find((d: {type: string}) => PLACE_TYPES.includes(d.type)) ?? null;
-        if (place) {
-          const addr = place.address || {};
-          const state = addr.state || addr.region || addr.county || undefined;
-          setGeoResult({ name: place.display_name.split(",")[0], lat: parseFloat(place.lat), lng: parseFloat(place.lon), state });
+        const PLACE_TYPES = ["city", "town", "village", "district", "county", "state"];
+        const feature = (data.features ?? []).find(
+          (f: { properties: { type: string; countrycode?: string } }) =>
+            PLACE_TYPES.includes(f.properties.type) && f.properties.countrycode === "RU"
+        ) ?? null;
+        if (feature) {
+          const p = feature.properties;
+          const [lng, lat] = feature.geometry.coordinates as [number, number];
+          setGeoResult({ name: p.name, lat, lng, state: p.state });
         } else {
           setGeoResult(null);
         }
