@@ -6,7 +6,7 @@ import { T, STATUS_COLORS, STATUS_META } from "../lib/constants";
 import { getStationStatus } from "../lib/votes";
 import { haversineKm, formatDist } from "../lib/utils";
 
-export function SearchBar({ stations, cities, votes, userPos, theme, selectedCity, favCount, isMobile, userLevel, onSelectStation, onSelectCity, onOpenMyStations, onOpenLevel, onNavigateTo }: {
+export function SearchBar({ stations, cities, votes, userPos, theme, selectedCity, favCount, isMobile, userLevel, onSelectStation, onSelectCity, onOpenMyStations, onOpenLevel, onNavigateTo, geoLabel }: {
   stations:         Station[];
   cities:           City[];
   votes:            VotesMap;
@@ -20,7 +20,8 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   onSelectCity:     (city: City) => void;
   onOpenMyStations: () => void;
   onOpenLevel:      () => void;
-  onNavigateTo:     (lat: number, lng: number) => void;
+  onNavigateTo:     (lat: number, lng: number, label: string) => void;
+  geoLabel?:        string;
 }) {
   const [query,     setQuery]     = useState("");
   const [open,      setOpen]      = useState(false);
@@ -171,7 +172,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
             ? <span style={{ fontSize: 14 }}>📍</span>
             : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={tk.textSub} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           }
-          {showLabel && <span style={{ color: tk.text, fontSize: 14, fontWeight: 600, userSelect: "none" }}>{selectedCity.name}</span>}
+          {showLabel && <span style={{ color: tk.text, fontSize: 14, fontWeight: 600, userSelect: "none" }}>{geoLabel ?? selectedCity.name}</span>}
           <input ref={inputRef} value={query}
             onChange={e => { setQuery(e.target.value); setOpen(true); setFocused(-1); }}
             onFocus={() => { setIsFocused(true); setOpen(true); }}
@@ -345,7 +346,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
                     }) ? (
                     <button
                       onMouseDown={() => {
-                        onNavigateTo(geoResult.lat, geoResult.lng);
+                        onNavigateTo(geoResult.lat, geoResult.lng, geoResult.name);
                         setQuery(""); setOpen(false);
                       }}
                       style={{

@@ -57,6 +57,7 @@ export default function MapView() {
   const [hoveredId,      setHoveredId]      = useState<string | null>(null);
   const [activeId,       setActiveId]       = useState<string>("");
   const [stations,       setStations]       = useState<Station[]>([]);
+  const [geoLabel,       setGeoLabel]       = useState<string | undefined>(undefined);
 
   const mapRef      = useRef<L.Map | null>(null);
   const votesRef    = useRef<VotesMap>({});
@@ -200,21 +201,19 @@ export default function MapView() {
     if (mapped.length > 0) setActiveId(mapped[0].id);
   }, []);
 
-  // Загружает станции в радиусе ~30км от точки и мержит с уже загруженными
+  // Загружает станции в радиусе ~25км от точки, заменяет текущие
   const loadStationsByBbox = useCallback(async (lat: number, lng: number) => {
-    const d = 0.35;
+    const d = 0.22;
     const { data, error } = await supabase
       .from("stations")
       .select("id, name, brand, brand_id, short, lat, lng, address, city")
       .gte("lat", lat - d).lte("lat", lat + d)
-      .gte("lng", lng - d * 1.5).lte("lng", lng + d * 1.5);
+      .gte("lng", lng - d * 1.6).lte("lng", lng + d * 1.6)
+      .limit(120);
     if (error || !data) return;
     const fresh = mapRows(data as Parameters<typeof mapRows>[0]);
-    setStations(prev => {
-      const existing = new Set(prev.map(s => s.id));
-      const newOnes = fresh.filter(s => !existing.has(s.id));
-      return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
-    });
+    setStations(fresh);
+    setSelId(null);
   }, []);
 
   useEffect(() => { loadStations(city.id, city.name); }, [loadStations, city.id, city.name]);
@@ -447,14 +446,15 @@ export default function MapView() {
           favCount={favorites.size} isMobile={isMobile}
           userLevel={userLevel}
           onSelectStation={(s) => selectStation(s.id)}
-          onSelectCity={(c) => setCity(c)}
+          onSelectCity={(c) => { setCity(c); setGeoLabel(undefined); }}
           onOpenMyStations={() => setShowMyStations(true)}
           onOpenLevel={() => setShowLevel(true)}
-          onNavigateTo={(_lat, _lng) => {
+          onNavigateTo={(_lat, _lng, label) => {
             if (mapRef.current) mapRef.current.flyTo([_lat, _lng], 13, { animate: true, duration: 1 });
-            // Загружаем станции вокруг точки и мержим — город не меняем
+            setGeoLabel(label);
             loadStationsByBbox(_lat, _lng);
           }}
+          geoLabel={geoLabel}
         />
         {/* Строка: Фильтры слева, Поддержать справа */}
         <div style={{
