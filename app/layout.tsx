@@ -13,12 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FuelMap — наличие топлива на АЗС",
+  title: "БензОК — наличие топлива на АЗС",
   description: "Актуальная информация о наличии топлива на заправках рядом с вами",
+  icons: {
+    icon: "/benzok-logo.png",
+    apple: "/benzok-logo.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "FuelMap",
+    title: "БензОК",
   },
 };
 
