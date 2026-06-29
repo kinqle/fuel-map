@@ -50,10 +50,10 @@ export function AboutScreen({ theme, isMobile, onClose }: {
     >
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: isMobile ? `calc(20px + env(safe-area-inset-top)) 20px 20px` : "24px 20px 20px",
+        padding: isMobile ? `calc(14px + env(safe-area-inset-top)) 16px 14px` : "24px 20px 20px",
         borderBottom: `1px solid ${tk.divider}`, flexShrink: 0,
       }}>
-        <img src="/benzoк-logo.svg" alt="БензОК" style={{ height: 42, objectFit: "contain" }} />
+        <img src="/benzok-logo.jpg" alt="БензОК" style={{ height: 40, objectFit: "contain", borderRadius: 8 }} />
         <button onClick={onClose} style={{
           width: 32, height: 32, borderRadius: "50%", border: "none",
           background: tk.rowBg, color: tk.textSub, cursor: "pointer",
@@ -61,7 +61,7 @@ export function AboutScreen({ theme, isMobile, onClose }: {
         }}>✕</button>
       </div>
 
-      <div style={{ padding: "24px 20px", flex: 1 }}>
+      <div style={{ padding: isMobile ? "16px 16px" : "24px 20px", flex: 1 }}>
         {section("Что такое БензОК?", <>
           {card("⛽", <><strong>БензОК</strong> — народная карта заправок. Водители в реальном времени сообщают, есть ли топливо на АЗС рядом с ними.</>)}
           {card("🗺️", "Открываете карту, выбираете город — и сразу видите, где бензин есть, а где очередь или пусто.")}

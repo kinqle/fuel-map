@@ -29,18 +29,17 @@ export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile 
     (e.currentTarget as HTMLElement).style.background = "transparent";
   };
 
-  const divider = isMobile
-    ? <div style={{ width: 1, background: tk.divider, margin: "8px 0" }} />
-    : <div style={{ height: 1, background: tk.divider, margin: "0 8px" }} />;
+  // На мобиле — тот же делитель, что и на десктопе (горизонтальный)
+  const divider = <div style={{ height: 1, background: tk.divider, margin: "0 8px" }} />;
 
   const wrapStyle: React.CSSProperties = isMobile ? {
     position: "fixed",
-    right: 16, bottom: "calc(16px + env(safe-area-inset-bottom))",
-    zIndex: 900, display: "flex", flexDirection: "row", gap: 2,
+    right: 12, top: "50%", transform: "translateY(-50%)",
+    zIndex: 900, display: "flex", flexDirection: "column", gap: 2,
     background: tk.ctrl,
     backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
     border: `1px solid ${tk.ctrlBorder}`,
-    borderRadius: 18, padding: "0 6px",
+    borderRadius: 18, padding: "6px 0",
     boxShadow: "0 4px 20px rgba(0,0,0,0.28)",
   } : {
     position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)",

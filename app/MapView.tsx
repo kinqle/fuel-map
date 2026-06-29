@@ -79,6 +79,13 @@ export default function MapView() {
 
   useEffect(() => { setTheme(getStoredTheme()); }, []);
 
+  // Обновляем цвет статус-бара браузера при смене темы
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const color = theme === "dark" ? "#0a0a0a" : "#ffffff";
+    if (meta) meta.setAttribute("content", color);
+  }, [theme]);
+
   useEffect(() => {
     const t = setTimeout(() => setShowTgBanner(true), 1500);
     return () => clearTimeout(t);
@@ -525,7 +532,7 @@ export default function MapView() {
         {showTgBanner && (
           <div style={{
             position: "fixed",
-            bottom: isMobile ? "calc(24px + env(safe-area-inset-bottom))" : 24,
+            bottom: isMobile ? "calc(148px + env(safe-area-inset-bottom))" : 24,
             left: 0, right: 0,
             display: "flex", justifyContent: "center",
             zIndex: 1100, pointerEvents: "none",
