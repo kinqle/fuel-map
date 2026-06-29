@@ -40,36 +40,27 @@ export interface VoteXpResult {
   newLevel:   number;
 }
 
-// Начислить XP с учётом двух уровней защиты:
-// 1) 8-часовой кулдаун на конкретный вид топлива → 0 XP
-// 2) В рамках одного часа на заправке первый голос даёт полный XP, остальные — XP_PER_VOTE_EXTRA
+// Начислить XP за голос:
+// - первый голос на заправке за последний час → полный XP (20)
+// - дополнительные виды топлива в той же сессии → XP_PER_VOTE_EXTRA (3)
+// Кулдаун по топливу убран — защита через геолокацию в MapView
 export function awardVoteXp(stationId: string, fuel: string): VoteXpResult {
-  const data     = load();
-  const fuelKey  = `${stationId}:${fuel}`;
-  const now      = Date.now();
-  const lastFuel = data.cooldowns[fuelKey] ?? 0;
-  const oldLevel = levelFromXp(data.xp);
-
-  // Жёсткий кулдаун: уже голосовал по этому топливу недавно
-  if (now - lastFuel < COOLDOWN_MS) {
-    return { awarded: false, xpGained: 0, newXp: data.xp, totalVotes: data.totalVotes, oldLevel, newLevel: oldLevel };
-  }
-
-  // Определяем, первый ли это голос на этой заправке в текущей сессии
-  const lastStation = data.stationFirst[stationId] ?? 0;
+  const data         = load();
+  const now          = Date.now();
+  const oldLevel     = levelFromXp(data.xp);
+  const lastStation  = data.stationFirst[stationId] ?? 0;
   const isNewSession = now - lastStation >= SESSION_MS;
-  const gain = isNewSession ? XP_PER_VOTE : XP_PER_VOTE_EXTRA;
-
-  const newXp    = data.xp + gain;
-  const newLevel = levelFromXp(newXp);
+  const gain         = isNewSession ? XP_PER_VOTE : XP_PER_VOTE_EXTRA;
+  const newXp        = data.xp + gain;
+  const newLevel     = levelFromXp(newXp);
 
   save({
     xp:           newXp,
     totalVotes:   data.totalVotes + 1,
-    cooldowns:    { ...data.cooldowns, [fuelKey]: now },
+    cooldowns:    data.cooldowns,
     stationFirst: isNewSession
-      ? { ...data.stationFirst, [stationId]: now } // начинаем новую сессию
-      : data.stationFirst,                          // сессия продолжается
+      ? { ...data.stationFirst, [stationId]: now }
+      : data.stationFirst,
   });
 
   return { awarded: true, xpGained: gain, newXp, totalVotes: data.totalVotes + 1, oldLevel, newLevel };

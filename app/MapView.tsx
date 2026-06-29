@@ -13,7 +13,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { supabase } from "../lib/supabase";
 import type { Theme, FuelId, VoteValue, Station, City, VotesMap, VoteRow, RecentVote, RecentMap, Filters } from "../lib/types";
 import { CITIES_FALLBACK, FUELS, TILE_URLS, T, DEFAULT_FILTERS, EMPTY_FUEL, RECENT_LIMIT } from "../lib/constants";
-import { getDeviceId, getStoredTheme, haversineKm } from "../lib/utils";
+import { getDeviceId, getStoredTheme, haversineKm, formatDist } from "../lib/utils";
 import { voteWeight, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { MapRefCapture, MarkersLayer, MapClickHandler, CityFlyTo, MapMoveHandler } from "../components/MapLayers";
@@ -266,6 +266,21 @@ export default function MapView() {
 
   const handleVote = useCallback(async (fuel: FuelId, value: VoteValue) => {
     if (voting || !selId) return;
+
+    // Гео-проверка: голосование только в радиусе 2 км от заправки
+    const targetStation = stationsRef.current.find(s => s.id === selId);
+    if (!userPos) {
+      toast.error("Включите геолокацию — нам нужно убедиться, что вы рядом с заправкой", { duration: 4000 });
+      return;
+    }
+    if (targetStation) {
+      const dist = haversineKm(userPos, targetStation.position);
+      if (dist > 2) {
+        toast.error(`Вы слишком далеко от заправки (${formatDist(dist)}). Подъедьте ближе 🚗`, { duration: 4000 });
+        return;
+      }
+    }
+
     const myId = getDeviceId();
     setVoting(true);
 
