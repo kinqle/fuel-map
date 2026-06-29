@@ -84,10 +84,12 @@ export default function MapView() {
 
   useEffect(() => { setTheme(getStoredTheme()); }, []);
 
-  // Обновляем цвет статус-бара браузера при смене темы
+  // Синхронизируем цвет body/html и статус-бара с выбранной темой
   useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]');
     const color = theme === "dark" ? "#0a0a0a" : "#ffffff";
+    document.documentElement.style.background = color;
+    document.body.style.background = color;
+    const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", color);
   }, [theme]);
 
