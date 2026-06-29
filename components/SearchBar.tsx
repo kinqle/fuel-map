@@ -53,7 +53,8 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
     geoTimer.current = setTimeout(async () => {
       try {
         // Photon поддерживает префиксный поиск (автокомплит), Nominatim — нет
-        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lat=55.75&lon=37.62`;
+        // lang=default возвращает OSM name тег — для русских городов это кириллица
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=default&lat=55.75&lon=37.62`;
         const res = await fetch(url);
         const data = await res.json();
         const PLACE_TYPES = ["city", "town", "village", "district", "county", "state"];
@@ -337,7 +338,11 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
                 <div style={{ padding: "16px" }}>
                   {isSearching ? (
                     <div style={{ color: tk.textSub, fontSize: 13, textAlign: "center" }}>🔍 Ищем на карте…</div>
-                  ) : geoResult ? (
+                  ) : geoResult && cities.some(c => {
+                      const s = (geoResult.state ?? "").trim().toLowerCase();
+                      const n = c.name.trim().toLowerCase();
+                      return s === n || s.includes(n) || n.includes(s);
+                    }) ? (
                     <button
                       onMouseDown={() => {
                         onNavigateTo(geoResult.lat, geoResult.lng, geoResult.name, geoResult.state);
