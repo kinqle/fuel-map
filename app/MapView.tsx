@@ -400,8 +400,54 @@ export default function MapView() {
       <SideControls
         theme={theme} onToggleTheme={toggleTheme}
         onLocate={handleLocate} mapRef={mapRef} isMobile={isMobile}
-        onOpenAbout={() => setShowAbout(true)}
       />
+
+      {/* Логотип + кнопка «О проекте» в левом верхнем углу */}
+      <div style={{
+        position: "absolute",
+        left: 16,
+        top: `calc(16px + env(safe-area-inset-top))`,
+        zIndex: 900,
+        display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6,
+      }}>
+        <div style={{
+          background: tk.ctrl,
+          backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          border: `1px solid ${tk.ctrlBorder}`,
+          borderRadius: 16,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.28)",
+          overflow: "hidden",
+          width: isMobile ? 120 : 148,
+        }}>
+          {/* Логотип */}
+          <img
+            src="/benzok-logo.jpg"
+            alt="БензОК"
+            style={{ width: "100%", display: "block", borderRadius: "16px 16px 0 0" }}
+          />
+          {/* Кнопка О проекте */}
+          <button
+            onClick={() => setShowAbout(true)}
+            style={{
+              width: "100%", border: "none", cursor: "pointer",
+              background: "transparent",
+              padding: isMobile ? "7px 0" : "9px 0",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+              color: tk.textSub, fontFamily: "inherit",
+              fontSize: isMobile ? 11 : 12, fontWeight: 600,
+              borderTop: `1px solid ${tk.ctrlBorder}`,
+              transition: "background 0.12s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" style={{ opacity: 0.6 }}>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            О проекте
+          </button>
+        </div>
+      </div>
 
       {(!isMobile || !selStation) && (
         <StationList

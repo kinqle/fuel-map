@@ -4,13 +4,12 @@ import L from "leaflet";
 import type { Theme } from "../lib/types";
 import { T } from "../lib/constants";
 
-export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile, onOpenAbout }: {
+export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile }: {
   theme:         Theme;
   onToggleTheme: () => void;
   onLocate:      () => void;
   mapRef:        React.RefObject<L.Map | null>;
   isMobile:      boolean;
-  onOpenAbout:   () => void;
 }) {
   const tk  = T[theme];
   const sz  = isMobile ? 48 : 42;
@@ -77,15 +76,6 @@ export function SideControls({ theme, onToggleTheme, onLocate, mapRef, isMobile,
         onClick={onToggleTheme}
         onMouseEnter={onHover} onMouseLeave={onLeave}>
         {theme === "dark" ? "☀️" : "🌙"}
-      </button>
-      {divider}
-      {/* Кнопка «О сервисе» */}
-      <button style={btn} title="О сервисе"
-        onClick={onOpenAbout}
-        onMouseEnter={onHover} onMouseLeave={onLeave}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-        </svg>
       </button>
     </div>
   );
