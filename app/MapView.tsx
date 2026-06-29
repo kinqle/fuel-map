@@ -179,6 +179,14 @@ export default function MapView() {
     });
   }, []);
 
+  const mapRows = (data: Array<{
+    id: string; name: string; brand: string | null; brand_id: string | null;
+    short: string; lat: number; lng: number; address: string | null; city: string;
+  }>): Station[] => data.map(row => ({
+    id: row.id, name: row.name, brand: row.brand_id ?? "", short: row.short,
+    position: [row.lat, row.lng] as [number, number], city: row.city, address: row.address ?? undefined,
+  }));
+
   const loadStations = useCallback(async (cityId: string, cityName: string) => {
     const { data, error } = await supabase
       .from("stations")
@@ -186,21 +194,27 @@ export default function MapView() {
       .or(`city.eq.${cityId},city.eq.${cityName}`)
       .order("name");
     if (error || !data) { console.error("Failed to load stations:", error); return; }
-    const mapped: Station[] = (data as Array<{
-      id: string; name: string; brand: string | null; brand_id: string | null;
-      short: string; lat: number; lng: number; address: string | null; city: string;
-    }>).map(row => ({
-      id:       row.id,
-      name:     row.name,
-      brand:    row.brand_id ?? "",
-      short:    row.short,
-      position: [row.lat, row.lng] as [number, number],
-      city:     row.city,
-      address:  row.address ?? undefined,
-    }));
+    const mapped = mapRows(data as Parameters<typeof mapRows>[0]);
     setStations(mapped);
     setSelId(null);
     if (mapped.length > 0) setActiveId(mapped[0].id);
+  }, []);
+
+  // Загружает станции в радиусе ~30км от точки и мержит с уже загруженными
+  const loadStationsByBbox = useCallback(async (lat: number, lng: number) => {
+    const d = 0.35;
+    const { data, error } = await supabase
+      .from("stations")
+      .select("id, name, brand, brand_id, short, lat, lng, address, city")
+      .gte("lat", lat - d).lte("lat", lat + d)
+      .gte("lng", lng - d * 1.5).lte("lng", lng + d * 1.5);
+    if (error || !data) return;
+    const fresh = mapRows(data as Parameters<typeof mapRows>[0]);
+    setStations(prev => {
+      const existing = new Set(prev.map(s => s.id));
+      const newOnes = fresh.filter(s => !existing.has(s.id));
+      return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
+    });
   }, []);
 
   useEffect(() => { loadStations(city.id, city.name); }, [loadStations, city.id, city.name]);
@@ -436,20 +450,10 @@ export default function MapView() {
           onSelectCity={(c) => setCity(c)}
           onOpenMyStations={() => setShowMyStations(true)}
           onOpenLevel={() => setShowLevel(true)}
-          onNavigateTo={(_lat, _lng, _label, state) => {
+          onNavigateTo={(_lat, _lng) => {
             if (mapRef.current) mapRef.current.flyTo([_lat, _lng], 13, { animate: true, duration: 1 });
-            // Matчим по имени региона из Nominatim — точнее центроида
-            const byState = state
-              ? cities.find(c => {
-                  const s = state.trim().toLowerCase();
-                  const n = c.name.trim().toLowerCase();
-                  return s === n || s.includes(n) || n.includes(s);
-                })
-              : null;
-            const nearest = cities.reduce((best, c) =>
-              haversineKm([_lat, _lng], c.position) < haversineKm([_lat, _lng], best.position) ? c : best
-            );
-            setCity(byState ?? nearest);
+            // Загружаем станции вокруг точки и мержим — город не меняем
+            loadStationsByBbox(_lat, _lng);
           }}
         />
         {/* Строка: Фильтры слева, Поддержать справа */}
