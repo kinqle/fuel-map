@@ -168,7 +168,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
           title="Мои АЗС"
         >
           <span style={{ fontSize: 15 }}>★</span>
-          {!isMobile && <span style={{ fontSize: 12 }}>Мои АЗС</span>}
+          <span style={{ fontSize: 12 }}>Мои АЗС</span>
           {favCount > 0 && (
             <span style={{
               minWidth: 16, height: 16, borderRadius: 8, padding: "0 4px",
