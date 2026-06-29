@@ -353,6 +353,17 @@ export default function MapView() {
 
   return (
     <div style={{ position: "relative", height: "100dvh", width: "100%", overflow: "hidden", background: tk.bg }}>
+
+      {/* Перекрашиваем зону статус-бара (safe-area-inset-top) под текущую тему */}
+      {isMobile && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0,
+          height: "env(safe-area-inset-top)",
+          background: theme === "dark" ? "#0a0a0a" : "#ffffff",
+          zIndex: 9999, pointerEvents: "none",
+        }} />
+      )}
+
       <Toaster position="top-center" toastOptions={{
         style: {
           background:   theme === "dark" ? "#1e1e2a" : "#ffffff",
