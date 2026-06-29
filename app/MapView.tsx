@@ -435,6 +435,11 @@ export default function MapView() {
           onOpenLevel={() => setShowLevel(true)}
           onNavigateTo={(lat, lng) => {
             if (mapRef.current) mapRef.current.flyTo([lat, lng], 13, { animate: true, duration: 1 });
+            // Переключаем на ближайший город чтобы загрузились нужные станции
+            const nearest = cities.reduce((best, c) =>
+              haversineKm([lat, lng], c.position) < haversineKm([lat, lng], best.position) ? c : best
+            );
+            setCity(nearest);
           }}
         />
         {/* Строка: Фильтры слева, Поддержать справа */}

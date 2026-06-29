@@ -43,22 +43,25 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   const stResults   = q ? stations.filter(s => startsWithQ(s.name) || startsWithQ(s.brand)) : [];
   const cityResults = q ? cities.filter(c => startsWithQ(c.name)) : [];
 
-  // Геокодинг через Nominatim когда нет локальных результатов
-  const noLocal = q.length >= 2 && stResults.length === 0 && cityResults.length === 0;
+  // Геокодинг через Nominatim — только города/районы, минимум 3 символа
+  const noLocal = q.length >= 3 && stResults.length === 0 && cityResults.length === 0;
   useEffect(() => {
-    if (!noLocal) { setGeoResult(null); return; }
+    if (!noLocal) { setGeoResult(null); setGeoLoading(false); return; }
     if (geoTimer.current) clearTimeout(geoTimer.current);
     setGeoLoading(true);
     geoTimer.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + " Россия")}&format=json&limit=1&accept-language=ru`;
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=ru&accept-language=ru&addressdetails=1`;
         const res = await fetch(url, { headers: { "User-Agent": "BenzOK/1.0" } });
         const data = await res.json();
-        if (data[0]) setGeoResult({ name: data[0].display_name.split(",")[0], lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+        // Берём только населённые пункты, не магазины и POI
+        const PLACE_TYPES = ["city", "town", "village", "municipality", "administrative", "suburb", "district", "county"];
+        const place = data.find((d: {type: string}) => PLACE_TYPES.includes(d.type)) ?? null;
+        if (place) setGeoResult({ name: place.display_name.split(",")[0], lat: parseFloat(place.lat), lng: parseFloat(place.lon) });
         else setGeoResult(null);
       } catch { setGeoResult(null); }
       setGeoLoading(false);
-    }, 600);
+    }, 700);
   }, [q, noLocal]);
 
   type Item = { kind: "station"; station: Station } | { kind: "city"; city: City };
