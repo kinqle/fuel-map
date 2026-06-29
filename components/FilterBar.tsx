@@ -35,42 +35,57 @@ export function FilterBar({ filters, onFilters, theme }: {
     { id: "ai95"   as FuelId, label: "АИ-95", color: "#34d399" },
     { id: "diesel" as FuelId, label: "ДТ",    color: "#fbbf24" },
   ];
+
   const BRAND_OPTIONS = [
-    { id: "lukoil",  label: "Лукойл"   },
-    { id: "rosneft", label: "Роснефть" },
-    { id: "gazprom", label: "Газпром"  },
+    { id: "lukoil",         label: "Лукойл",        color: "#e63946" },
+    { id: "rosneft",        label: "Роснефть",       color: "#1a73e8" },
+    { id: "gazprom",        label: "Газпром",        color: "#2a9d8f" },
+    { id: "bashneft",       label: "Башнефть",       color: "#f97316" },
+    { id: "tatneft",        label: "Татнефть",       color: "#8b5cf6" },
+    { id: "surgutneftegas", label: "Сургутнефтегаз", color: "#0ea5e9" },
+    { id: "neftmagistral",  label: "Нефтьмагистраль",color: "#10b981" },
+    { id: "teboil",         label: "Teboil",         color: "#cc0000" },
+    { id: "bp",             label: "BP",             color: "#16a34a" },
+    { id: "shell",          label: "Shell",          color: "#ca8a04" },
+    { id: "neste",          label: "Neste",          color: "#0284c7" },
+    { id: "total",          label: "Total",          color: "#dc2626" },
   ];
 
-  const Row = ({
-    label, active, onPress, color = "#6366f1", disabled = false,
-  }: { label: string; active: boolean; onPress: () => void; color?: string; disabled?: boolean }) => (
+  const Chip = ({
+    label, active, onPress, color = "#6366f1",
+  }: { label: string; active: boolean; onPress: () => void; color?: string }) => (
     <button
-      onClick={() => { if (!disabled) onPress(); }}
+      onClick={onPress}
       style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        width: "100%", padding: "9px 12px", border: "none", borderRadius: 9,
-        background: active ? `${color}18` : "transparent",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.35 : 1,
-        fontFamily: "inherit", transition: "background 0.12s",
+        padding: "5px 10px",
+        borderRadius: 100,
+        border: `1.5px solid ${active ? color : tk.ctrlBorder}`,
+        background: active ? `${color}22` : "transparent",
+        color: active ? color : tk.textSub,
+        fontSize: 12,
+        fontWeight: active ? 700 : 500,
+        fontFamily: "inherit",
+        cursor: "pointer",
+        whiteSpace: "nowrap" as const,
+        transition: "all 0.12s",
+        lineHeight: 1.3,
       }}
     >
-      <span style={{ color: active ? color : tk.text, fontSize: 13, fontWeight: active ? 600 : 400 }}>
-        {label}
-      </span>
-      <div style={{
-        width: 16, height: 16, borderRadius: 4, flexShrink: 0,
-        border: `1.5px solid ${active ? color : tk.ctrlBorder}`,
-        background: active ? color : "transparent",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all 0.12s",
-      }}>
-        {active && <span style={{ color: "white", fontSize: 9, fontWeight: 900, lineHeight: 1 }}>✓</span>}
-      </div>
+      {label}
     </button>
   );
 
-  const Divider = () => <div style={{ height: 1, background: tk.divider, margin: "4px 0" }} />;
+  const Section = ({ label }: { label: string }) => (
+    <div style={{
+      fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
+      textTransform: "uppercase" as const,
+      color: tk.textSub, padding: "2px 0 6px",
+    }}>
+      {label}
+    </div>
+  );
+
+  const Divider = () => <div style={{ height: 1, background: tk.divider, margin: "8px 0" }} />;
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -111,37 +126,50 @@ export function FilterBar({ filters, onFilters, theme }: {
             transition={{ duration: 0.13, ease: "easeOut" }}
             style={{
               position: "absolute", top: "calc(100% + 6px)", left: 0,
-              width: 200, zIndex: 300,
+              width: 260, zIndex: 300,
               background: tk.cityListBg,
               border: `1px solid ${tk.cityListBorder}`,
-              borderRadius: 14,
+              borderRadius: 16,
               boxShadow: "0 8px 32px rgba(0,0,0,0.28)",
-              padding: "6px",
+              padding: "10px 10px 8px",
               transformOrigin: "top left",
             }}
           >
-            <div style={{ padding: "2px 4px 6px", color: tk.textSub, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>Топливо</div>
-            {FUEL_OPTIONS.map(f => (
-              <Row key={f.id} label={f.label} active={filters.fuels.has(f.id)} color={f.color}
-                onPress={() => onFilters({ ...filters, fuels: toggle(filters.fuels, f.id) })} />
-            ))}
+            {/* Топливо */}
+            <Section label="Топливо" />
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 2 }}>
+              {FUEL_OPTIONS.map(f => (
+                <Chip key={f.id} label={f.label} active={filters.fuels.has(f.id)} color={f.color}
+                  onPress={() => onFilters({ ...filters, fuels: toggle(filters.fuels, f.id) })} />
+              ))}
+            </div>
 
             <Divider />
-            <div style={{ padding: "4px 4px 6px", color: tk.textSub, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>Бренд</div>
-            {BRAND_OPTIONS.map(b => (
-              <Row key={b.id} label={b.label} active={filters.brands.has(b.id)} color="#a78bfa"
-                onPress={() => onFilters({ ...filters, brands: toggle(filters.brands, b.id) })} />
-            ))}
+
+            {/* Бренд */}
+            <Section label="Бренд" />
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 2 }}>
+              {BRAND_OPTIONS.map(b => (
+                <Chip key={b.id} label={b.label} active={filters.brands.has(b.id)} color={b.color}
+                  onPress={() => onFilters({ ...filters, brands: toggle(filters.brands, b.id) })} />
+              ))}
+            </div>
 
             <Divider />
-            <Row label="✅ В наличии" active={filters.inStockOnly} color="#22c55e"
-              onPress={() => onFilters({ ...filters, inStockOnly: !filters.inStockOnly })} />
+
+            {/* В наличии */}
+            <Chip
+              label="✅ В наличии"
+              active={filters.inStockOnly}
+              color="#22c55e"
+              onPress={() => onFilters({ ...filters, inStockOnly: !filters.inStockOnly })}
+            />
 
             {activeCount > 0 && (
               <>
                 <Divider />
                 <button onClick={() => { onFilters(DEFAULT_FILTERS); setOpen(false); }} style={{
-                  width: "100%", padding: "8px 12px", borderRadius: 9, border: "none",
+                  width: "100%", padding: "7px 12px", borderRadius: 9, border: "none",
                   background: "rgba(99,102,241,0.1)", color: "#818cf8",
                   fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer",
                 }}>Сбросить всё</button>
