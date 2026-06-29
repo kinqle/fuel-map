@@ -86,7 +86,7 @@ export default function MapView() {
 
   const selectStation = useCallback((id: string | null) => {
     setSelId(id);
-    if (id) { setShowMyStations(false); setShowAbout(false); }
+    if (id) { setShowMyStations(false); setShowAbout(false); setShowLevel(false); }
     if (id) {
       setActiveId(id);
       const s = stationsRef.current.find((x: Station) => x.id === id);
