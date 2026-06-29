@@ -26,6 +26,7 @@ import { MyStationsScreen } from "../components/MyStationsScreen";
 import { AboutScreen } from "../components/AboutScreen";
 import { LevelScreen } from "../components/LevelScreen";
 import { VoteAnimation } from "../components/VoteAnimation";
+import { LevelUpModal } from "../components/LevelUpModal";
 import { awardVoteXp, getUserXpData } from "../lib/userProfile";
 import { levelFromXp } from "../lib/xp";
 
@@ -43,8 +44,10 @@ export default function MapView() {
   const [showAbout,      setShowAbout]      = useState(false);
   const [showLevel,      setShowLevel]      = useState(false);
   const [showTgBanner,   setShowTgBanner]   = useState(false);
-  // Данные для анимации после голосования: null = скрыта
-  const [voteAnim, setVoteAnim] = useState<{ xpGained: number; levelUp: number | null; newXp: number } | null>(null);
+  // Данные для анимации XP после голосования
+  const [voteAnim,     setVoteAnim]     = useState<{ xpGained: number; newXp: number } | null>(null);
+  // Модальное окно повышения уровня
+  const [levelUpModal, setLevelUpModal] = useState<number | null>(null);
   // Текущий уровень для бейджа в SideControls
   const [userLevel, setUserLevel] = useState(() => levelFromXp(getUserXpData().xp));
   const [recommendedId,  setRecommendedId]  = useState<string | null>(null);
@@ -279,11 +282,11 @@ export default function MapView() {
       // Начисляем XP и показываем анимацию благодарности
       const xpResult = awardVoteXp(selId, fuel);
       setUserLevel(levelFromXp(xpResult.newXp));
-      setVoteAnim({
-        xpGained: xpResult.xpGained,
-        levelUp:  xpResult.newLevel > xpResult.oldLevel ? xpResult.newLevel : null,
-        newXp:    xpResult.newXp,
-      });
+      setVoteAnim({ xpGained: xpResult.xpGained, newXp: xpResult.newXp });
+      // Показываем модалку левел-апа после исчезновения VoteAnimation
+      if (xpResult.newLevel > xpResult.oldLevel) {
+        setTimeout(() => setLevelUpModal(xpResult.newLevel), 3200);
+      }
       const fl = FUELS.find((f) => f.id === fuel)?.label;
       toast.success(`${fl}: ${value === "yes" ? "есть ✓" : "нет ✗"}`, { duration: 2000 });
       const nowIso = new Date().toISOString();
@@ -561,10 +564,21 @@ export default function MapView() {
           <VoteAnimation
             key={String(voteAnim.newXp)}
             xpGained={voteAnim.xpGained}
-            levelUp={voteAnim.levelUp}
             newXp={voteAnim.newXp}
             theme={theme}
             onDone={() => setVoteAnim(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Модальное окно повышения уровня */}
+      <AnimatePresence>
+        {levelUpModal !== null && (
+          <LevelUpModal
+            key={levelUpModal}
+            level={levelUpModal}
+            theme={theme}
+            onClose={() => setLevelUpModal(null)}
           />
         )}
       </AnimatePresence>

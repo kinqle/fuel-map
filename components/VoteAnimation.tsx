@@ -3,8 +3,6 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import type { Theme } from "../lib/types";
 import { T } from "../lib/constants";
-import { LEVEL_NAMES, tierColor } from "../lib/xp";
-
 // Фиксированные позиции частиц — разброс вокруг центра карточки
 const PARTICLES = [
   { id: 0, dx: -90, emoji: "❤️", delay: 0.00 },
@@ -17,15 +15,13 @@ const PARTICLES = [
   { id: 7, dx:  70, emoji: "💫", delay: 0.36 },
 ];
 
-export function VoteAnimation({ xpGained, levelUp, newXp, theme, onDone }: {
+export function VoteAnimation({ xpGained, newXp, theme, onDone }: {
   xpGained: number;
-  levelUp:  number | null;
   newXp:    number;
   theme:    Theme;
   onDone:   () => void;
 }) {
-  const tk    = T[theme];
-  const color = levelUp ? tierColor(levelUp) : "#818cf8";
+  const tk = T[theme];
 
   // Автоматически скрыть через 2.8 секунды
   useEffect(() => {
@@ -97,27 +93,9 @@ export function VoteAnimation({ xpGained, levelUp, newXp, theme, onDone }: {
               border: "1.5px solid rgba(99,102,241,0.5)",
               borderRadius: 24, padding: "8px 20px",
               color: "#818cf8", fontWeight: 800, fontSize: 17,
-              marginBottom: levelUp ? 10 : 0,
             }}
           >
             ⚡ +{xpGained} XP
-          </motion.div>
-        )}
-
-        {/* Сообщение о повышении уровня */}
-        {levelUp && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.52, type: "spring", stiffness: 420, damping: 22 }}
-            style={{
-              background: `linear-gradient(135deg,${color}25,${color}15)`,
-              border: `1.5px solid ${color}70`,
-              borderRadius: 20, padding: "8px 18px",
-              color, fontWeight: 800, fontSize: 14,
-            }}
-          >
-            🎉 Уровень {levelUp}! · {LEVEL_NAMES[levelUp] ?? ""}
           </motion.div>
         )}
       </motion.div>

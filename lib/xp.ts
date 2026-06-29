@@ -131,16 +131,22 @@ export function tierName(level: number): string {
   return "Легендарный";
 }
 
-// Цвет тира
+// Цвет тира (для обратной совместимости)
 export function tierColor(level: number): string {
-  if (level <= 5)  return "#9ca3af";
-  if (level <= 10) return "#4ade80";
-  if (level <= 15) return "#60a5fa";
-  if (level <= 20) return "#a78bfa";
-  if (level <= 25) return "#fb923c";
-  if (level <= 30) return "#f87171";
-  if (level <= 35) return "#fbbf24";
-  if (level <= 40) return "#22d3ee";
-  if (level <= 45) return "#f472b6";
-  return "#818cf8";
+  return levelColor(level);
+}
+
+// Уникальный цвет для каждого тира уровней (10 групп × 5 уровней)
+// Прогрессия: серый → зелёный → циан → синий → фиолетовый → розовый → оранжевый → красный → золотой → индиго
+export function levelColor(level: number): string {
+  if (level <= 5)  return "#94a3b8"; // серый
+  if (level <= 10) return "#22c55e"; // зелёный
+  if (level <= 15) return "#06b6d4"; // циан
+  if (level <= 20) return "#3b82f6"; // синий
+  if (level <= 25) return "#a855f7"; // пурпурный
+  if (level <= 30) return "#ec4899"; // розовый
+  if (level <= 35) return "#f97316"; // оранжевый
+  if (level <= 40) return "#ef4444"; // красный
+  if (level <= 45) return "#eab308"; // золотой
+  return "#6366f1";                  // индиго — Легендарный
 }
