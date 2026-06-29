@@ -73,7 +73,7 @@ export function FilterBar({ filters, onFilters, theme }: {
   const Divider = () => <div style={{ height: 1, background: tk.divider, margin: "4px 0" }} />;
 
   return (
-    <div ref={ref} style={{ position: "relative", marginTop: 6 }}>
+    <div ref={ref} style={{ position: "relative" }}>
       <button
         onClick={() => setOpen(v => !v)}
         style={{

@@ -412,7 +412,42 @@ export default function MapView() {
           onOpenMyStations={() => setShowMyStations(true)}
           onOpenLevel={() => setShowLevel(true)}
         />
-        <FilterBar filters={filters} onFilters={setFilters} theme={theme} />
+        {/* Строка: Фильтры слева, Поддержать справа */}
+        <div style={{
+          display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+          width: isMobile ? "calc(100vw - 32px)" : "440px",
+          marginTop: 6,
+        }}>
+          <FilterBar filters={filters} onFilters={setFilters} theme={theme} />
+
+          {/* Кнопка поддержки проекта */}
+          <a
+            href="https://pay.cloudtips.ru/p/9edca9ec"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "7px 13px", borderRadius: 20,
+              background: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+              boxShadow: "0 2px 12px rgba(239,68,68,0.35), 0 0 0 1px rgba(245,158,11,0.4)",
+              color: "#fff", fontSize: 12, fontWeight: 700,
+              fontFamily: "inherit", cursor: "pointer",
+              textDecoration: "none", flexShrink: 0,
+              transition: "transform 0.12s, box-shadow 0.12s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.transform = "scale(1.04)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 18px rgba(239,68,68,0.5), 0 0 0 1px rgba(245,158,11,0.5)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 12px rgba(239,68,68,0.35), 0 0 0 1px rgba(245,158,11,0.4)";
+            }}
+          >
+            <span style={{ fontSize: 13 }}>☕</span>
+            Поддержать
+          </a>
+        </div>
       </div>
 
       <SideControls
