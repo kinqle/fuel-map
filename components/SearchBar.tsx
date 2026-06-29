@@ -6,7 +6,7 @@ import { T, STATUS_COLORS, STATUS_META } from "../lib/constants";
 import { getStationStatus } from "../lib/votes";
 import { haversineKm, formatDist } from "../lib/utils";
 
-export function SearchBar({ stations, cities, votes, userPos, theme, selectedCity, favCount, isMobile, onSelectStation, onSelectCity, onOpenMyStations }: {
+export function SearchBar({ stations, cities, votes, userPos, theme, selectedCity, favCount, isMobile, userLevel, onSelectStation, onSelectCity, onOpenMyStations, onOpenLevel }: {
   stations:         Station[];
   cities:           City[];
   votes:            VotesMap;
@@ -15,9 +15,11 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   selectedCity:     City;
   favCount:         number;
   isMobile:         boolean;
+  userLevel:        number;
   onSelectStation:  (station: Station) => void;
   onSelectCity:     (city: City) => void;
   onOpenMyStations: () => void;
+  onOpenLevel:      () => void;
 }) {
   const [query,     setQuery]     = useState("");
   const [open,      setOpen]      = useState(false);
@@ -117,7 +119,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   };
 
   return (
-    <div style={{ position: "relative", width: barWidth }}>
+    <div style={{ position: "relative", width: barWidth, display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 0,
         background: tk.ctrl,
@@ -177,6 +179,46 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
         </button>
       </div>
 
+      {/* Кнопка «Ваш уровень в БензОК» — располагается под строкой поиска */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); onOpenLevel(); }}
+        style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "9px 14px",
+          background: tk.ctrl,
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          border: `1.5px solid rgba(99,102,241,0.35)`,
+          borderRadius: 14,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.22)",
+          cursor: "pointer", width: "100%",
+          color: "#818cf8", fontFamily: "inherit",
+          transition: "border-color 0.15s, background 0.15s",
+        }}
+        onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.65)")}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.35)")}
+      >
+        {/* Иконка трофея */}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#818cf8" style={{ flexShrink: 0 }}>
+          <path d="M19 5h-1V3H6v2H5C3.3 5 2 6.3 2 8c0 1.1.6 2.1 1.5 2.7.9 2.4 3.1 4.2 5.8 4.6L9 17H7v2h10v-2h-2l-.3-1.7c2.7-.4 4.9-2.2 5.8-4.6.9-.6 1.5-1.6 1.5-2.7 0-1.7-1.3-3-3-3zM4 8c0-.6.4-1 1-1v3.9C4.4 10.4 4 9.2 4 8zm16 0c0 1.2-.4 2.4-1 3.2V7c.6 0 1 .4 1 1z"/>
+        </svg>
+        <span style={{ fontSize: 13, fontWeight: 700, flex: 1, textAlign: "left" }}>
+          Ваш уровень в БензОК
+        </span>
+        {/* Бейдж с номером уровня */}
+        <span style={{
+          minWidth: 22, height: 22, borderRadius: 11,
+          background: "rgba(99,102,241,0.20)",
+          border: "1.5px solid rgba(99,102,241,0.45)",
+          color: "#818cf8", fontSize: 11, fontWeight: 800,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "0 5px", flexShrink: 0,
+        }}>
+          {userLevel}
+        </span>
+      </button>
+
+      {/* Выпадающий список поиска — позиционируется относительно всего враппера */}
+      <div style={{ position: "relative" }}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -266,6 +308,7 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

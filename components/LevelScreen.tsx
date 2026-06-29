@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Theme } from "../lib/types";
 import { T } from "../lib/constants";
 import {
@@ -34,6 +34,8 @@ export function LevelScreen({ theme, isMobile, onClose }: {
 
   // Читаем XP один раз при монтировании (экран закрывается и открывается заново)
   const [xpData] = useState(getUserXpData);
+  // Контролируем сворачивание информационной карточки
+  const [infoOpen, setInfoOpen] = useState(true);
 
   const { level, current, needed, pct } = levelProgress(xpData.xp);
   const color    = tierColor(level);
@@ -68,6 +70,61 @@ export function LevelScreen({ theme, isMobile, onClose }: {
       transition={{ type: "spring", stiffness: 340, damping: 32 }}
       style={panelStyle}
     >
+      {/* Информационная карточка — объяснение системы */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        style={{
+          marginBottom: 20,
+          background: theme === "dark" ? "rgba(99,102,241,0.10)" : "rgba(99,102,241,0.07)",
+          border: `1px solid rgba(99,102,241,0.30)`,
+          borderRadius: 18, overflow: "hidden",
+        }}
+      >
+        <button
+          onClick={() => setInfoOpen(o => !o)}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "14px 16px", background: "none", border: "none", cursor: "pointer",
+            color: "#818cf8",
+          }}
+        >
+          <span style={{ fontWeight: 700, fontSize: 14 }}>🏆 Как работает система уровней?</span>
+          <motion.span
+            animate={{ rotate: infoOpen ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ fontSize: 12, opacity: 0.7 }}
+          >▼</motion.span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {infoOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              style={{ overflow: "hidden" }}
+            >
+              <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { ico: "⚡", text: "За каждое голосование о наличии топлива вы получаете 20 XP" },
+                  { ico: "⏱️", text: "XP начисляется раз в 8 часов на каждой заправке — это защита от накрутки. Объезжать все станции ради XP бессмысленно" },
+                  { ico: "🎖️", text: "Каждые 5 уровней выдаётся значок. Всего 50 уровней и 10 значков" },
+                  { ico: "🌍", text: "Ваш рейтинг отражает реальный вклад в помощь водителям города" },
+                ].map(({ ico, text }) => (
+                  <div key={ico} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{ico}</span>
+                    <span style={{ fontSize: 12, color: tk.textSub, lineHeight: 1.5 }}>{text}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* Шапка */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>

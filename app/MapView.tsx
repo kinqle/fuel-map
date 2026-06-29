@@ -388,9 +388,11 @@ export default function MapView() {
           stations={stations} cities={cities} votes={votes}
           userPos={userPos} theme={theme} selectedCity={city}
           favCount={favorites.size} isMobile={isMobile}
+          userLevel={userLevel}
           onSelectStation={(s) => selectStation(s.id)}
           onSelectCity={(c) => setCity(c)}
           onOpenMyStations={() => setShowMyStations(true)}
+          onOpenLevel={() => setShowLevel(true)}
         />
         <FilterBar filters={filters} onFilters={setFilters} theme={theme} />
       </div>
@@ -398,7 +400,6 @@ export default function MapView() {
       <SideControls
         theme={theme} onToggleTheme={toggleTheme}
         onLocate={handleLocate} mapRef={mapRef} isMobile={isMobile}
-        onOpenLevel={() => setShowLevel(true)} userLevel={userLevel}
       />
 
       {(!isMobile || !selStation) && (
