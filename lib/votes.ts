@@ -106,12 +106,16 @@ export function calcRecommended(
   votes:    VotesMap,
 ): string | null {
   if (!stations.length) return null;
-  let bestId    = stations[0].id;
+  // Рекомендуем только если есть реальные голоса и станция в 15км
+  const MAX_DIST = 15;
+  let bestId    = null as string | null;
   let bestScore = -1;
   for (const s of stations) {
     const status = getStationStatus(votes[s.id] ?? {});
-    const dist   = haversineKm(center, s.position);
-    const score  = 0.6 * STATUS_SCORE[status] + 0.4 * (1 / (1 + dist));
+    if (status === "neutral") continue; // нет голосов — не рекомендуем
+    const dist = haversineKm(center, s.position);
+    if (dist > MAX_DIST) continue; // слишком далеко
+    const score = 0.6 * STATUS_SCORE[status] + 0.4 * (1 / (1 + dist));
     if (score > bestScore) { bestScore = score; bestId = s.id; }
   }
   return bestId;

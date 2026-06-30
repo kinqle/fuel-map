@@ -126,7 +126,7 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
               }}>⛽</div>
             )}
-            <div>
+            <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ color: tk.text, fontSize: 17, fontWeight: 700, lineHeight: 1.2, letterSpacing: "-0.01em" }}>
                 {station.name}
               </div>
