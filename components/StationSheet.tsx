@@ -59,16 +59,13 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
 
   useEffect(() => {
     const since = new Date(Date.now() - ARCHIVE_MS).toISOString();
-    supabase.from("comments")
-      .select("category, body, created_at")
-      .eq("station_id", station.id)
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data?.[0]) {
-          const cat = COMMENT_CATS.find(c => c.id === data[0].category) ?? COMMENT_CATS[COMMENT_CATS.length - 1];
-          setLatestComment({ emoji: cat.emoji, label: cat.label, body: data[0].body, at: data[0].created_at });
+    const params = new URLSearchParams({ station_id: station.id, since, limit: "1" });
+    fetch(`/api/comments?${params}`)
+      .then(r => r.json())
+      .then(({ comments }) => {
+        if (comments?.[0]) {
+          const cat = COMMENT_CATS.find(c => c.id === comments[0].category) ?? COMMENT_CATS[COMMENT_CATS.length - 1];
+          setLatestComment({ emoji: cat.emoji, label: cat.label, body: comments[0].body, at: comments[0].created_at });
         }
       });
   }, [station.id]);

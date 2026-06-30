@@ -63,10 +63,12 @@ export default function MapView() {
   const votesRef    = useRef<VotesMap>({});
   const selIdRef    = useRef<string | null>(null);
   const stationsRef = useRef<Station[]>([]);
+  const cityRef     = useRef<City>(CITIES_FALLBACK[0]);
 
   useEffect(() => { selIdRef.current    = selId;    }, [selId]);
   useEffect(() => { stationsRef.current = stations; }, [stations]);
   useEffect(() => { votesRef.current    = votes;    }, [votes]);
+  useEffect(() => { cityRef.current     = city;     }, [city]);
 
   const filteredStations = useMemo(() => stations.filter((s: Station) => {
     if (filters.brands.size > 0 && !filters.brands.has(s.brand)) return false;
@@ -167,17 +169,18 @@ export default function MapView() {
   }, []);
 
   useEffect(() => {
-    supabase.from("cities").select("id, name, lat, lng").order("sort_order").then(({ data }) => {
-      if (data && data.length > 0) {
-        const mapped = (data as Array<{ id: string; name: string; lat: number; lng: number }>)
-          .map(r => ({ id: r.id, name: r.name, position: [r.lat, r.lng] as [number, number] }));
-        // Добавляем из CITIES_FALLBACK всё что нет в БД (например "mo" = Московская область)
-        const dbIds = new Set(mapped.map(c => c.id));
-        const extras = CITIES_FALLBACK.filter(c => !dbIds.has(c.id));
-        setCities([...mapped, ...extras]);
-        setCity(mapped[0]);
-      }
-    });
+    fetch("/api/cities")
+      .then(r => r.json())
+      .then((data: Array<{ id: string; name: string; lat: number; lng: number }>) => {
+        if (data && data.length > 0) {
+          const mapped = data.map(r => ({ id: r.id, name: r.name, position: [r.lat, r.lng] as [number, number] }));
+          const dbIds = new Set(mapped.map(c => c.id));
+          const extras = CITIES_FALLBACK.filter(c => !dbIds.has(c.id));
+          setCities([...mapped, ...extras]);
+          setCity(mapped[0]);
+        }
+      })
+      .catch(() => { /* fallback уже в state */ });
   }, []);
 
   const mapRows = (data: Array<{
@@ -189,12 +192,10 @@ export default function MapView() {
   }));
 
   const loadStations = useCallback(async (cityId: string, cityName: string) => {
-    const { data, error } = await supabase
-      .from("stations")
-      .select("id, name, brand, brand_id, short, lat, lng, address, city")
-      .or(`city.eq.${cityId},city.eq.${cityName}`)
-      .order("name");
-    if (error || !data) { console.error("Failed to load stations:", error); return; }
+    const params = new URLSearchParams({ city_id: cityId, city_name: cityName });
+    const res = await fetch(`/api/stations?${params}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) { console.error("Failed to load stations"); return; }
     const mapped = mapRows(data as Parameters<typeof mapRows>[0]);
     setStations(mapped);
     setSelId(null);
@@ -205,15 +206,12 @@ export default function MapView() {
 
   useEffect(() => { loadStations(city.id, city.name); }, [loadStations, city.id, city.name]);
 
-  const loadVotes = useCallback(async (stationIds: string[]) => {
-    if (stationIds.length === 0) { setVotes({}); setRecentVotes({}); return; }
+  const loadVotes = useCallback(async (cityId: string, cityName: string) => {
     const myId = getDeviceId();
-    const { data, error } = await supabase
-      .from("votes")
-      .select("*")
-      .in("station_id", stationIds)
-      .order("created_at", { ascending: false });
-    if (error || !data) return;
+    const params = new URLSearchParams({ city_id: cityId, city_name: cityName });
+    const res = await fetch(`/api/votes?${params}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) return;
 
     const deduped = new Map<string, VoteRow>();
     for (const v of data as VoteRow[]) {
@@ -258,14 +256,14 @@ export default function MapView() {
   }, []);
 
   useEffect(() => {
-    loadVotes(stations.map(s => s.id));
-  }, [stations, loadVotes]);
+    loadVotes(city.id, city.name);
+  }, [stations, loadVotes, city.id, city.name]);
 
   useEffect(() => {
     const channel = supabase
       .channel("votes-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "votes" },
-        () => { loadVotes(stationsRef.current.map(s => s.id)); }
+        () => { loadVotes(cityRef.current.id, cityRef.current.name); }
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -290,11 +288,13 @@ export default function MapView() {
     const myId = getDeviceId();
     setVoting(true);
 
-    await supabase.from("votes").delete()
-      .eq("station_id", selId).eq("fuel", fuel).eq("device_id", myId);
-
-    const { error } = await supabase.from("votes")
-      .insert({ station_id: selId, fuel, value, device_id: myId });
+    const voteRes = await fetch("/api/votes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ station_id: selId, fuel, value, device_id: myId }),
+    });
+    const voteJson = await voteRes.json();
+    const error = voteJson.error ? { message: voteJson.error as string } : null;
 
     if (error) {
       console.error("Vote error:", error);
@@ -327,7 +327,7 @@ export default function MapView() {
         const entry: RecentVote = { fuel, value, at: nowIso, mine: true };
         return { ...prev, [selId!]: [entry, ...existing].slice(0, RECENT_LIMIT) };
       });
-      await loadVotes(stationsRef.current.map(s => s.id));
+      await loadVotes(cityRef.current.id, cityRef.current.name);
     }
     setVoting(false);
   }, [voting, selId, loadVotes]);

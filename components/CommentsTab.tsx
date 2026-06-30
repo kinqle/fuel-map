@@ -31,22 +31,13 @@ export function CommentsTab({ stationId, theme }: { stationId: string; theme: Th
 
   const load = useCallback(async () => {
     const since = new Date(Date.now() - ARCHIVE_MS).toISOString();
-    const { data: cData } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("station_id", stationId)
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(60);
-    if (!cData?.length) { setComments([]); setLoading(false); return; }
+    const params = new URLSearchParams({ station_id: stationId, since });
+    const res = await fetch(`/api/comments?${params}`);
+    const json = await res.json();
+    const cData: Comment[] = json.comments ?? [];
+    if (!cData.length) { setComments([]); setLoading(false); return; }
 
-    const ids = (cData as Comment[]).map(c => c.id);
-    const { data: rData } = await supabase
-      .from("comment_reactions")
-      .select("comment_id, device_id, type")
-      .in("comment_id", ids);
-
-    const reactions = (rData ?? []) as { comment_id: string; device_id: string; type: string }[];
+    const reactions = (json.reactions ?? []) as { comment_id: string; device_id: string; type: string }[];
 
     const mapped: Comment[] = (cData as Comment[]).map(c => {
       const cr = reactions.filter(r => r.comment_id === c.id);
@@ -105,11 +96,12 @@ export function CommentsTab({ stationId, theme }: { stationId: string; theme: Th
     const trimBody = body.trim().slice(0, MAX_BODY);
     try { localStorage.setItem("comment_name", trimName); } catch { /* */ }
     setSubmitting(true);
-    const { error } = await supabase.from("comments").insert({
-      station_id: stationId, device_id: myId,
-      author_name: trimName, category: cat,
-      body: trimBody || null,
+    const res = await fetch("/api/comments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ station_id: stationId, device_id: myId, author_name: trimName, category: cat, body: trimBody || null }),
     });
+    const { error } = await res.json().then(j => ({ error: j.error ? { message: j.error } : null }));
     if (!error) {
       try { localStorage.setItem(`last_comment_${stationId}`, String(Date.now())); } catch { /* */ }
       toast.success("Сообщение отправлено!");
@@ -121,20 +113,21 @@ export function CommentsTab({ stationId, theme }: { stationId: string; theme: Th
   };
 
   const toggleLike = async (c: Comment) => {
-    if (c.myLike) {
-      await supabase.from("comment_reactions").delete()
-        .eq("comment_id", c.id).eq("device_id", myId).eq("type", "like");
-    } else {
-      await supabase.from("comment_reactions")
-        .upsert({ comment_id: c.id, device_id: myId, type: "like" });
-    }
+    await fetch("/api/reactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: c.myLike ? "delete" : "upsert", comment_id: c.id, device_id: myId, type: "like" }),
+    });
     load();
   };
 
   const reportComment = async (c: Comment) => {
     if (c.myReport) return;
-    await supabase.from("comment_reactions")
-      .upsert({ comment_id: c.id, device_id: myId, type: "report" });
+    await fetch("/api/reactions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "upsert", comment_id: c.id, device_id: myId, type: "report" }),
+    });
     toast("Жалоба отправлена", { icon: "✓" });
     load();
   };
