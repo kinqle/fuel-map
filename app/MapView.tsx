@@ -202,19 +202,6 @@ export default function MapView() {
   }, []);
 
   // Загружает станции в радиусе ~25км от точки, заменяет текущие
-  const loadStationsByBbox = useCallback(async (lat: number, lng: number) => {
-    const d = 0.22;
-    const { data, error } = await supabase
-      .from("stations")
-      .select("id, name, brand, brand_id, short, lat, lng, address, city")
-      .gte("lat", lat - d).lte("lat", lat + d)
-      .gte("lng", lng - d * 1.6).lte("lng", lng + d * 1.6)
-      .limit(120);
-    if (error || !data) return;
-    const fresh = mapRows(data as Parameters<typeof mapRows>[0]);
-    setStations(fresh);
-    setSelId(null);
-  }, []);
 
   useEffect(() => { loadStations(city.id, city.name); }, [loadStations, city.id, city.name]);
 
@@ -452,7 +439,18 @@ export default function MapView() {
           onNavigateTo={(_lat, _lng, label) => {
             if (mapRef.current) mapRef.current.flyTo([_lat, _lng], 13, { animate: true, duration: 1 });
             setGeoLabel(label);
-            loadStationsByBbox(_lat, _lng);
+            // Определяем нужный город по bbox координат
+            const moCity    = cities.find(c => c.id === "mo");
+            const inMO      = _lat >= 54.0 && _lat <= 57.0 && _lng >= 35.0 && _lng <= 41.5;
+            const inMoscow  = _lat >= 55.45 && _lat <= 56.0 && _lng >= 36.8 && _lng <= 37.95;
+            if (inMO && !inMoscow && moCity) {
+              setCity(moCity);
+            } else {
+              const nearest = cities.reduce((best, c) =>
+                haversineKm([_lat, _lng], c.position) < haversineKm([_lat, _lng], best.position) ? c : best
+              );
+              setCity(nearest);
+            }
           }}
           geoLabel={geoLabel}
         />

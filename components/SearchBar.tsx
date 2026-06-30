@@ -42,7 +42,8 @@ export function SearchBar({ stations, cities, votes, userPos, theme, selectedCit
   };
 
   const stResults   = q ? stations.filter(s => startsWithQ(s.name) || startsWithQ(s.brand)) : [];
-  const cityResults = q ? cities.filter(c => startsWithQ(c.name)) : [];
+  // "mo" скрыт из поиска — пользователи ищут конкретный город, не регион
+  const cityResults = q ? cities.filter(c => c.id !== "mo" && startsWithQ(c.name)) : [];
 
   // Геокодинг через Nominatim — только города/районы, минимум 2 символа
   const noLocal = q.length >= 2 && stResults.length === 0 && cityResults.length === 0;
