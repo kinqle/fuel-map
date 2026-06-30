@@ -139,7 +139,7 @@ describe("getStationStatus", () => {
 // ─── nearestStation ───────────────────────────────────────────────────────────
 
 const mkStation = (id: string, lat: number, lng: number): Station => ({
-  id, name: id, short: id, brand: "test",
+  id, name: id, short: id, brand: "test", brand_id: null,
   position: [lat, lng],
 });
 

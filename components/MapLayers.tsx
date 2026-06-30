@@ -71,7 +71,7 @@ export function MarkersLayer({
         getFuelStatusColor(sv.ai95),
         getFuelStatusColor(sv.diesel),
       ];
-      const pinColor = BRAND_COLORS[s.brand] ?? STATUS_COLORS[status].bg;
+      const pinColor = BRAND_COLORS[s.brand_id ?? ""] ?? STATUS_COLORS[status].bg;
       marker.setIcon(createStationIcon(
         s.short, status,
         s.id === selectedId, s.id === recommendedId, s.id === hoveredId,

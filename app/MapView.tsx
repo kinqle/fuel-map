@@ -187,8 +187,9 @@ export default function MapView() {
     id: string; name: string; brand: string | null; brand_id: string | null;
     short: string; lat: number; lng: number; address: string | null; city: string;
   }>): Station[] => data.map(row => ({
-    id: row.id, name: row.name, brand: row.brand_id ?? "", short: row.short,
-    position: [row.lat, row.lng] as [number, number], city: row.city, address: row.address ?? undefined,
+    id: row.id, name: row.name, brand: row.brand ?? "", brand_id: row.brand_id,
+    short: row.short, position: [row.lat, row.lng] as [number, number],
+    city: row.city, address: row.address ?? undefined,
   }));
 
   const loadStations = useCallback(async (cityId: string, cityName: string) => {

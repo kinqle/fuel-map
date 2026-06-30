@@ -75,7 +75,7 @@ export function MyStationsScreen({ stations, favorites, votes, userPos, theme, i
               const sv     = votes[s.id] ?? {};
               const status = getStationStatus(sv);
               const sm     = STATUS_META[status];
-              const color  = BRAND_COLORS[s.brand] ?? "#6366f1";
+              const color  = BRAND_COLORS[s.brand_id ?? ""] ?? "#6366f1";
               const dist   = userPos ? haversineKm(userPos, s.position) : null;
               return (
                 <button key={s.id} onClick={() => { onSelect(s.id); onClose(); }} style={{
@@ -85,13 +85,13 @@ export function MyStationsScreen({ stations, favorites, votes, userPos, theme, i
                   borderBottom: `1px solid ${tk.divider}`,
                   transition: "background 0.12s",
                 }}>
-                  {BRAND_LOGOS[s.brand] ? (
+                  {BRAND_LOGOS[s.brand_id ?? ""] ? (
                     <div style={{
                       width: 44, height: 44, borderRadius: 12, flexShrink: 0,
                       background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                       overflow: "hidden", padding: 4, boxShadow: "0 0 0 1.5px rgba(0,0,0,0.08)",
                     }}>
-                      <img src={BRAND_LOGOS[s.brand]} alt={s.name}
+                      <img src={BRAND_LOGOS[s.brand_id ?? ""]} alt={s.name}
                         style={{ width: "100%", height: "100%", objectFit: "contain" }}
                         onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }} />
                     </div>

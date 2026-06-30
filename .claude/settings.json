@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m 'fix: тг-баннер чуть ниже на мобиле *)",
+      "Bash(git commit -m 'fix: переименование FuelMap -> БензОК, иконка и PWA manifest *)",
+      "Bash(git commit -m 'feat: фильтры переделаны на компактные чипы, добавлены все 12 брендов *)",
+      "Bash(node scripts/import-stations.mjs \"Московская область\")",
+      "Bash(git commit -m 'feat: добавлена Московская область в список городов \\(1390 АЗС\\) *)",
+      "Bash(curl -s \"https://lsrxzgeiazkwzslvxpuu.supabase.co/rest/v1/stations?select=city&apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxzcnh6Z2VpYXprd3pzbHZ4cHV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTI3OTQsImV4cCI6MjA5Nzg4ODc5NH0.FxV3ibMmn70FPZ499G7CxYn8_-VaiNvYKaTd1MXmGdk\" -H \"Prefer: count=exact\" -I)",
+      "Bash(curl -s \"https://lsrxzgeiazkwzslvxpuu.supabase.co/rest/v1/stations?select=city&apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxzcnh6Z2VpYXprd3pzbHZ4cHV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMTI3OTQsImV4cCI6MjA5Nzg4ODc5NH0.FxV3ibMmn70FPZ499G7CxYn8_-VaiNvYKaTd1MXmGdk&limit=5000\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); const c={}; d.forEach\\(r=>{c[r.city]=\\(c[r.city]||0\\)+1}\\); Object.entries\\(c\\).sort\\(\\(a,b\\)=>b[1]-a[1]\\).forEach\\(\\([k,v]\\)=>console.log\\(v+'\\\\t'+k\\)\\)\")",
+      "Bash(node -e \"const d=require\\('C:/Users/egorf/AppData/Local/Temp/stations.json'\\); const c={}; d.forEach\\(r=>{c[r.city]=\\(c[r.city]||0\\)+1}\\); Object.entries\\(c\\).sort\\(\\(a,b\\)=>b[1]-a[1]\\).forEach\\(\\([k,v]\\)=>console.log\\(v+'\\\\t'+k\\)\\); console.log\\('ИТОГО:',d.length\\)\")",
+      "Bash(git commit -m 'feat: геокодинг в поиске — вводишь Клин, летим туда на карте *)",
+      "Bash(git commit -m 'fix: геокодинг только населённые пункты, автопереключение города при навигации *)",
+      "Bash(git commit -m 'fix: геокодинг показывает регион, матчинг города по state из Nominatim *)",
+      "Bash(node -e ' *)",
+      "Bash(git commit -m 'fix: mo всегда в списке городов, нет flash, station loading для МО исправлен *)",
+      "Bash(git commit -m 'fix: геокодинг от 2 символов, дебаунс 350мс, мгновенный спиннер *)",
+      "Bash(curl -s \"https://photon.komoot.io/api/?q=%D1%81%D0%BE&limit=5&lang=ru&lat=55.75&lon=37.62\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); j.features.slice\\(0,3\\).forEach\\(f=>console.log\\(f.properties.type, f.properties.countrycode, f.properties.name, '|', f.properties.state\\)\\)\")",
+      "PowerShell($r = Invoke-RestMethod \"https://photon.komoot.io/api/?q=%D1%81%D0%BE&limit=5&lang=ru&lat=55.75&lon=37.62\"; $r.features | ForEach-Object { \"$\\($_.properties.type\\) | $\\($_.properties.countrycode\\) | $\\($_.properties.name\\) | $\\($_.properties.state\\)\" })",
+      "PowerShell($r = Invoke-RestMethod \"https://photon.komoot.io/api/?q=%D1%81%D0%BE%D0%BB%D0%BD%D0%B5&limit=5&lat=55.75&lon=37.62\"; $r.features | ForEach-Object { \"$\\($_.properties.type\\) | $\\($_.properties.countrycode\\) | $\\($_.properties.name\\) | $\\($_.properties.state\\)\" })",
+      "PowerShell($r = Invoke-RestMethod \"https://photon.komoot.io/api/?q=%D1%81%D0%BE%D0%BB%D0%BD%D0%B5&limit=3&lat=55.75&lon=37.62\"; $r.features[0].properties | ConvertTo-Json)",
+      "Bash(git commit -m 'fix: переключение на Photon API для префиксного поиска городов *)",
+      "Bash(git commit -m 'fix: Photon lang=default для кириллицы, фильтр только поддерживаемых городов *)",
+      "Bash(git commit -m 'fix: bbox-загрузка при геопоиске без смены города, убран bias Photon *)",
+      "Bash(git commit -m 'fix: geoLabel показывает Клин в поиске, bbox заменяет станции, радиус 25км *)",
+      "Bash(nslookup benzok.site 8.8.8.8)",
+      "Bash(curl -sI --max-time 5 https://benzok.site)",
+      "Bash(curl -sI --max-time 5 https://www.benzok.site)",
+      "Bash(git commit -m 'fix: share кнопка не обрезается, рекомендация только с голосами и до 15км *)",
+      "Bash(find /c/Users/egorf/fuel-map -name \"*.html\" -newer /c/Users/egorf/fuel-map/package.json 2>/dev/null | head -10; find /c/Users/egorf/AppData/Local/Temp -name \"benzok*\" -o -name \"landing*\" -o -name \"promo*\" 2>/dev/null | head -10)",
+      "Read(//c/Users/egorf/AppData/Local/Temp/**)",
+      "Bash(ls \"C:/Users/egorf/Downloads/\" | grep -i \"qr\\\\|benzok\\\\|channel\" 2>/dev/null; ls \"C:/Users/egorf/Desktop/\" | grep -i \"qr\\\\|benzok\" 2>/dev/null)",
+      "Read(//c/Users/egorf/**)",
+      "Bash(grep -v \"//\\\\|import\\\\|require\")",
+      "Bash(git commit -m 'fix: проксировать Supabase через Next.js API — обход блокировок мобильных операторов *)",
+      "Bash(curl -sI --max-time 10 https://benzok.site)",
+      "Bash(curl -sI --max-time 10 https://www.benzok.site)",
+      "Bash(nslookup www.benzok.site 8.8.8.8)",
+      "Bash(python3 -c ' *)",
+      "Bash(git commit -m 'fix: логотипы брендов по brand_id вместо brand-имени во всех компонентах *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\egorf\\Downloads"
+    ]
+  }
+}

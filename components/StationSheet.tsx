@@ -104,13 +104,13 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {BRAND_LOGOS[station.brand] ? (
+            {BRAND_LOGOS[station.brand_id ?? ""] ? (
               <div style={{
                 width: 52, height: 52, borderRadius: 14, flexShrink: 0,
                 background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                 overflow: "hidden", padding: 5, boxShadow: "0 2px 10px rgba(0,0,0,0.12)",
               }}>
-                <img src={BRAND_LOGOS[station.brand]} alt={station.name}
+                <img src={BRAND_LOGOS[station.brand_id ?? ""]} alt={station.name}
                   style={{ width: "100%", height: "100%", objectFit: "contain" }}
                   onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
                 />

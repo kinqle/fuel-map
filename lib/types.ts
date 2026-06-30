@@ -8,6 +8,7 @@ export interface Station {
   name:     string;
   short:    string;
   brand:    string;
+  brand_id: string | null;
   position: [number, number];
   city?:    string;
   address?: string;

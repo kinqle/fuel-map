@@ -76,7 +76,7 @@ export function StationList({ stations, selectedId, activeId, hoveredId, votes, 
           const isSelected = s.id === selectedId;
           const isActive   = s.id === activeId && s.id !== selectedId;
           const isHovered  = s.id === hoveredId;
-          const color      = BRAND_COLORS[s.brand] ?? "#6366f1";
+          const color      = BRAND_COLORS[s.brand_id ?? ""] ?? "#6366f1";
 
           const cardStyle: React.CSSProperties = isMobile
             ? { flexShrink: 0, width: 148, padding: "10px 12px" }
@@ -109,14 +109,14 @@ export function StationList({ stations, selectedId, activeId, hoveredId, votes, 
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-                {BRAND_LOGOS[s.brand] ? (
+                {BRAND_LOGOS[s.brand_id ?? ""] ? (
                   <div style={{
                     width: 32, height: 32, borderRadius: 9, flexShrink: 0,
                     background: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                     overflow: "hidden", padding: 3,
                     boxShadow: "0 0 0 1.5px rgba(0,0,0,0.08)",
                   }}>
-                    <img src={BRAND_LOGOS[s.brand]} alt={s.name}
+                    <img src={BRAND_LOGOS[s.brand_id ?? ""]} alt={s.name}
                       style={{ width: "100%", height: "100%", objectFit: "contain" }}
                       onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
                     />

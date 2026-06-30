@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 130">
+  <defs>
+    <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#86efac"/>
+      <stop offset="40%"  stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </linearGradient>
+    <linearGradient id="sh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="100%" stop-color="#021a0b"/>
+    </linearGradient>
+    <filter id="f1" x="-4%" y="-4%" width="110%" height="125%">
+      <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="f2" x="-4%" y="-4%" width="110%" height="125%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Бенз — 3D shadow layer -->
+  <text x="14" y="113"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900" font-size="104" letter-spacing="-2"
+    fill="url(#sh)">Бенз</text>
+
+  <!-- Бенз — main -->
+  <text x="10" y="108"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900" font-size="104" letter-spacing="-2"
+    fill="url(#gr)" filter="url(#f1)">Бенз</text>
+
+  <!-- 👌 emoji -->
+  <text x="290" y="108"
+    font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif"
+    font-size="96" dominant-baseline="auto">👌</text>
+
+  <!-- К — 3D shadow layer -->
+  <text x="404" y="113"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900" font-size="104" letter-spacing="-2"
+    fill="url(#sh)">К</text>
+
+  <!-- К — main -->
+  <text x="400" y="108"
+    font-family="Arial Black, Impact, sans-serif"
+    font-weight="900" font-size="104" letter-spacing="-2"
+    fill="url(#gr)" filter="url(#f1)">К</text>
+</svg>
