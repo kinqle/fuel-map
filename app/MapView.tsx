@@ -14,7 +14,7 @@ import { supabase } from "../lib/supabase";
 import type { Theme, FuelId, VoteValue, Station, City, VotesMap, VoteRow, RecentVote, RecentMap, Filters } from "../lib/types";
 import { CITIES_FALLBACK, FUELS, TILE_URLS, T, DEFAULT_FILTERS, EMPTY_FUEL, RECENT_LIMIT } from "../lib/constants";
 import { getDeviceId, getStoredTheme, haversineKm, formatDist } from "../lib/utils";
-import { voteWeight, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
+import { voteWeight, velocityBoost, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { MapRefCapture, MarkersLayer, MapClickHandler, CityFlyTo, MapMoveHandler } from "../components/MapLayers";
 import { SideControls } from "../components/SideControls";
@@ -224,6 +224,14 @@ export default function MapView() {
       b.created_at.localeCompare(a.created_at)
     );
 
+    // Pre-pass: собираем timestamps по station+fuel для расчёта velocity
+    const tsMap = new Map<string, string[]>();
+    for (const v of sorted) {
+      const k = `${v.station_id}:${v.fuel}`;
+      if (!tsMap.has(k)) tsMap.set(k, []);
+      tsMap.get(k)!.push(v.created_at);
+    }
+
     const grouped: VotesMap  = {};
     const recent:  RecentMap = {};
 
@@ -235,7 +243,8 @@ export default function MapView() {
       }
       const e = grouped[v.station_id][fuel]!;
 
-      const w = voteWeight(v.created_at);
+      const boost = velocityBoost(tsMap.get(`${v.station_id}:${v.fuel}`) ?? []);
+      const w = voteWeight(v.created_at) * boost;
       if (v.value === "yes") { e.yes++; e.yesW += w; }
       else                    { e.no++;  e.noW  += w; }
       if (v.device_id === myId) e.myVote = v.value as VoteValue;

@@ -7,8 +7,25 @@ const STATUS_SCORE: Record<MarkerStatus, number> = { green: 3, yellow: 1.5, neut
 export function voteWeight(createdAt: string): number {
   let ts = createdAt.replace(" ", "T");
   if (!/[Z+]/.test(ts.slice(10))) ts += "Z";
-  const ageSec = (Date.now() - new Date(ts).getTime()) / 1000;
-  return Math.exp(-ageSec / HALFLIFE_SEC);
+  const ageSec   = (Date.now() - new Date(ts).getTime()) / 1000;
+  const hour     = new Date().getHours();
+  const isPeak   = (hour >= 7 && hour < 10) || (hour >= 17 && hour < 20);
+  // В пиковые часы топливо разбирают быстрее — голоса стареют на 40% быстрее
+  const effectiveAge = isPeak ? ageSec * 1.4 : ageSec;
+  return Math.exp(-effectiveAge / HALFLIFE_SEC);
+}
+
+// Boost для кластерных голосов: если несколько человек проголосовали быстро подряд —
+// это сильнее, чем те же голоса, размазанные по часам
+export function velocityBoost(timestamps: string[]): number {
+  if (timestamps.length < 3) return 1.0;
+  const sorted  = [...timestamps].map(t => new Date(t).getTime()).sort((a, b) => a - b);
+  const recent  = sorted.slice(-5);
+  const spanMin = (recent[recent.length - 1] - recent[0]) / 60000;
+  if (spanMin <= 20) return 1.6;
+  if (spanMin <= 45) return 1.3;
+  if (spanMin <= 90) return 1.15;
+  return 1.0;
 }
 
 export function calcFuelConfidence(fd: FuelVotes): number {
