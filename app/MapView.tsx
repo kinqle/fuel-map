@@ -27,8 +27,10 @@ import { AboutScreen } from "../components/AboutScreen";
 import { LevelScreen } from "../components/LevelScreen";
 import { VoteAnimation } from "../components/VoteAnimation";
 import { LevelUpModal } from "../components/LevelUpModal";
+import { TripConfirmBanner } from "../components/TripConfirmBanner";
 import { awardVoteXp, getUserXpData } from "../lib/userProfile";
 import { levelFromXp } from "../lib/xp";
+import { savePendingTrip, getPendingTrip, clearPendingTrip } from "../lib/tripConfirm";
 
 export default function MapView() {
   const [theme,          setTheme]          = useState<Theme>("dark");
@@ -60,6 +62,7 @@ export default function MapView() {
   const [activeId,       setActiveId]       = useState<string>("");
   const [stations,       setStations]       = useState<Station[]>([]);
   const [geoLabel,       setGeoLabel]       = useState<string | undefined>(undefined);
+  const [tripConfirm,    setTripConfirm]    = useState<{ stationId: string; stationName: string } | null>(null);
 
   const mapRef      = useRef<L.Map | null>(null);
   const votesRef    = useRef<VotesMap>({});
@@ -101,6 +104,21 @@ export default function MapView() {
   useEffect(() => {
     const t = setTimeout(() => setShowTgBanner(true), 1500);
     return () => clearTimeout(t);
+  }, []);
+
+  // Проверяем есть ли ожидающее подтверждение поездки (при загрузке и при возврате на вкладку)
+  useEffect(() => {
+    const check = () => {
+      const trip = getPendingTrip();
+      if (trip) setTripConfirm({ stationId: trip.stationId, stationName: trip.stationName });
+    };
+    check();
+    document.addEventListener("visibilitychange", check);
+    return () => document.removeEventListener("visibilitychange", check);
+  }, []);
+
+  const handleNavigate = useCallback((stationId: string, stationName: string) => {
+    savePendingTrip(stationId, stationName);
   }, []);
 
   const selectStation = useCallback((id: string | null) => {
@@ -367,6 +385,23 @@ export default function MapView() {
     setVoting(false);
   }, [voting, selId, loadVotes]);
 
+  const handleTripConfirm = useCallback(async (value: "yes" | "no") => {
+    if (!tripConfirm) return;
+    clearPendingTrip();
+    setTripConfirm(null);
+    const deviceId = getDeviceId();
+    const fuels: FuelId[] = ["ai92", "ai95", "diesel"];
+    await Promise.all(fuels.map(fuel =>
+      fetch("/api/votes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ station_id: tripConfirm.stationId, fuel, value, device_id: deviceId }),
+      })
+    ));
+    await loadVotes(cityRef.current.id, cityRef.current.name);
+    toast.success(value === "yes" ? "Спасибо! Голос учтён" : "Спасибо! Данные обновлены", { duration: 2000 });
+  }, [tripConfirm, loadVotes]);
+
   const applyPosition = useCallback((lat: number, lng: number) => {
     const pos: [number, number] = [lat, lng];
     userPosRef.current = pos;
@@ -525,6 +560,40 @@ export default function MapView() {
             Поддержать
           </a>
         </div>
+
+        {/* Быстрый фильтр по топливу */}
+        <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+          {([
+            { id: "ai92"   as const, label: "АИ-92", color: "#60a5fa" },
+            { id: "ai95"   as const, label: "АИ-95", color: "#34d399" },
+            { id: "diesel" as const, label: "ДТ",    color: "#fbbf24" },
+          ]).map(f => {
+            const active = filters.fuels.has(f.id);
+            return (
+              <button
+                key={f.id}
+                onClick={() => {
+                  const next = new Set(filters.fuels);
+                  active ? next.delete(f.id) : next.add(f.id);
+                  setFilters({ ...filters, fuels: next });
+                }}
+                style={{
+                  padding: "6px 14px", borderRadius: 100,
+                  border: `1.5px solid ${active ? f.color : tk.ctrlBorder}`,
+                  background: active ? `${f.color}22` : tk.ctrl,
+                  backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+                  color: active ? f.color : tk.textSub,
+                  fontSize: 12, fontWeight: active ? 700 : 500,
+                  fontFamily: "inherit", cursor: "pointer",
+                  transition: "all 0.15s",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                }}
+              >
+                {active ? "✓ " : ""}{f.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <SideControls
@@ -606,6 +675,7 @@ export default function MapView() {
             isFavorite={favorites.has(selStation.id)}
             onToggleFavorite={() => toggleFavorite(selStation.id)}
             isMobile={isMobile}
+            onNavigate={() => handleNavigate(selStation.id, selStation.name)}
           />
         )}
       </AnimatePresence>
@@ -719,6 +789,20 @@ export default function MapView() {
               >×</button>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Подтверждение после поездки */}
+      <AnimatePresence>
+        {tripConfirm && (
+          <TripConfirmBanner
+            stationName={tripConfirm.stationName}
+            theme={theme}
+            isMobile={isMobile}
+            onYes={() => handleTripConfirm("yes")}
+            onNo={() => handleTripConfirm("no")}
+            onDismiss={() => { clearPendingTrip(); setTripConfirm(null); }}
+          />
         )}
       </AnimatePresence>
     </div>

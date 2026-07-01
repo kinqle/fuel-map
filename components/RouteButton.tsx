@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { Station, Theme } from "../lib/types";
 import { T, type TkType } from "../lib/constants";
 
-export function RouteButton({ station, color, tk }: { station: Station; color: string; tk: TkType }) {
+export function RouteButton({ station, color, tk, onNavigate }: { station: Station; color: string; tk: TkType; onNavigate?: () => void }) {
   const [open, setOpen] = useState(false);
   const lat = station.position[0];
   const lon = station.position[1];
@@ -59,7 +59,7 @@ export function RouteButton({ station, color, tk }: { station: Station; color: s
                 href={app.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); onNavigate?.(); }}
                 style={{
                   display: "block", padding: "13px 18px",
                   color: tk.text, fontWeight: 500, fontSize: 14,

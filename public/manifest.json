@@ -1,0 +1,14 @@
+{
+  "name": "БензОК",
+  "short_name": "БензОК",
+  "description": "Актуальная информация о наличии топлива на АЗС рядом с вами",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    { "src": "/benzok-logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/benzok-logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

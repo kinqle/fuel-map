@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SwRegister } from "../components/SwRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "БензОК — наличие топлива на АЗС",
   description: "Актуальная информация о наличии топлива на заправках рядом с вами",
+  manifest: "/manifest.json",
   icons: {
     icon: "/benzok-logo.png",
     apple: "/benzok-logo.png",
@@ -56,7 +58,10 @@ export default function RootLayout({
           } catch(e) {}
         `}} />
       </head>
-      <body className="min-h-full flex flex-col" style={{ background: "#0a0a0a" }}>{children}</body>
+      <body className="min-h-full flex flex-col" style={{ background: "#0a0a0a" }}>
+        <SwRegister />
+        {children}
+      </body>
     </html>
   );
 }

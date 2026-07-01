@@ -9,7 +9,7 @@ import { getStationStatus, calcFuelConfidence, getFuelVerdict, getFreshnessInfo,
 import { RouteButton } from "./RouteButton";
 import { CommentsTab } from "./CommentsTab";
 
-export function StationSheet({ station, votes, recentVotes, onVote, onClose, voting, theme, userPos, isFavorite, onToggleFavorite, isMobile, isRecommended, isUnstable }: {
+export function StationSheet({ station, votes, recentVotes, onVote, onClose, voting, theme, userPos, isFavorite, onToggleFavorite, isMobile, isRecommended, isUnstable, onNavigate }: {
   station:          Station;
   votes:            Partial<Record<FuelId, FuelVotes>>;
   recentVotes:      RecentVote[];
@@ -23,6 +23,7 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
   isMobile:         boolean;
   isRecommended:    boolean;
   isUnstable:       boolean;
+  onNavigate?:      () => void;
 }) {
   const color  = BRAND_COLORS[station.brand] ?? "#6366f1";
   const tk     = T[theme];
@@ -503,7 +504,7 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
 
         {sheetTab === "comments" && <CommentsTab stationId={station.id} theme={theme} />}
 
-        <RouteButton station={station} color="#3b82f6" tk={tk} />
+        <RouteButton station={station} color="#3b82f6" tk={tk} onNavigate={onNavigate} />
       </div>
     </motion.div>
   );
