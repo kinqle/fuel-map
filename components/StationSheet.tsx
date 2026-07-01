@@ -9,7 +9,7 @@ import { getStationStatus, calcFuelConfidence, getFuelVerdict, getFreshnessInfo,
 import { RouteButton } from "./RouteButton";
 import { CommentsTab } from "./CommentsTab";
 
-export function StationSheet({ station, votes, recentVotes, onVote, onClose, voting, theme, userPos, isFavorite, onToggleFavorite, isMobile, isRecommended }: {
+export function StationSheet({ station, votes, recentVotes, onVote, onClose, voting, theme, userPos, isFavorite, onToggleFavorite, isMobile, isRecommended, isUnstable }: {
   station:          Station;
   votes:            Partial<Record<FuelId, FuelVotes>>;
   recentVotes:      RecentVote[];
@@ -22,6 +22,7 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
   onToggleFavorite: () => void;
   isMobile:         boolean;
   isRecommended:    boolean;
+  isUnstable:       boolean;
 }) {
   const color  = BRAND_COLORS[station.brand] ?? "#6366f1";
   const tk     = T[theme];
@@ -211,6 +212,20 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
           <span style={{ fontSize: 15 }}>{isFavorite ? "★" : "☆"}</span>
           {isFavorite ? "В избранном" : "Добавить в избранное"}
         </button>
+
+        {isUnstable && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, marginBottom: 12,
+            padding: "10px 14px", borderRadius: 12,
+            background: "rgba(245,158,11,0.12)", border: "1.5px solid rgba(245,158,11,0.35)",
+          }}>
+            <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+            <div>
+              <div style={{ color: "#f59e0b", fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>Данные нестабильны</div>
+              <div style={{ color: tk.textSub, fontSize: 11, marginTop: 2 }}>Ситуация на АЗС быстро менялась в последние часы</div>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 4, marginBottom: 14, background: tk.rowBg, borderRadius: 12, padding: 4 }}>

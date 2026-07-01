@@ -14,7 +14,7 @@ import { supabase } from "../lib/supabase";
 import type { Theme, FuelId, VoteValue, Station, City, VotesMap, VoteRow, RecentVote, RecentMap, Filters } from "../lib/types";
 import { CITIES_FALLBACK, FUELS, TILE_URLS, T, DEFAULT_FILTERS, EMPTY_FUEL, RECENT_LIMIT } from "../lib/constants";
 import { getDeviceId, getStoredTheme, haversineKm, formatDist } from "../lib/utils";
-import { voteWeight, velocityBoost, confirmatoryBoost, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
+import { voteWeight, velocityBoost, confirmatoryBoost, isStationUnstable, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { MapRefCapture, MarkersLayer, MapClickHandler, CityFlyTo, MapMoveHandler } from "../components/MapLayers";
 import { SideControls } from "../components/SideControls";
@@ -53,6 +53,8 @@ export default function MapView() {
   // Текущий уровень для бейджа в SideControls
   const [userLevel, setUserLevel] = useState(() => levelFromXp(getUserXpData().xp));
   const [recommendedId,  setRecommendedId]  = useState<string | null>(null);
+  const [unstableIds,    setUnstableIds]    = useState<Set<string>>(new Set());
+  const unstableIdsRef = useRef<Set<string>>(new Set());
   const [filters,        setFilters]        = useState<Filters>(DEFAULT_FILTERS);
   const [hoveredId,      setHoveredId]      = useState<string | null>(null);
   const [activeId,       setActiveId]       = useState<string>("");
@@ -116,7 +118,7 @@ export default function MapView() {
 
   const recalc = useCallback((center: [number, number]) => {
     if (selIdRef.current) return;
-    setRecommendedId(calcRecommended(center, stationsRef.current, votesRef.current));
+    setRecommendedId(calcRecommended(center, stationsRef.current, votesRef.current, unstableIdsRef.current));
     if (stationsRef.current.length > 0)
       setActiveId(nearestStation(center, stationsRef.current));
   }, []);
@@ -126,7 +128,7 @@ export default function MapView() {
     const center = mapRef.current
       ? [mapRef.current.getCenter().lat, mapRef.current.getCenter().lng] as [number, number]
       : (cur[0]?.position ?? [56.8587, 35.9176]);
-    const rec = calcRecommended(center, cur, votes);
+    const rec = calcRecommended(center, cur, votes, unstableIdsRef.current);
     setRecommendedId(rec);
     if (rec && !selIdRef.current) setActiveId(rec);
   }, [votes, stations]);
@@ -262,6 +264,20 @@ export default function MapView() {
         });
       }
     }
+
+    // Вычисляем нестабильные станции (3+ смены направления за 3ч по любому виду топлива)
+    const unstable = new Set<string>();
+    const stationFuelLists = new Map<string, Array<Array<{ value: string; created_at: string }>>>();
+    for (const [k, gv] of groupMap.entries()) {
+      const stId = k.split(":")[0];
+      if (!stationFuelLists.has(stId)) stationFuelLists.set(stId, []);
+      stationFuelLists.get(stId)!.push(gv);
+    }
+    for (const [stId, lists] of stationFuelLists.entries()) {
+      if (isStationUnstable(lists)) unstable.add(stId);
+    }
+    unstableIdsRef.current = unstable;
+    setUnstableIds(unstable);
 
     setVotes(grouped);
     setRecentVotes(recent);
@@ -579,6 +595,7 @@ export default function MapView() {
             onClose={() => setSelId(null)}
             voting={voting} theme={theme} userPos={userPos}
             isRecommended={selStation.id === recommendedId}
+            isUnstable={unstableIds.has(selStation.id)}
             isFavorite={favorites.has(selStation.id)}
             onToggleFavorite={() => toggleFavorite(selStation.id)}
             isMobile={isMobile}

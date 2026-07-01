@@ -133,21 +133,44 @@ export function nearestStation(center: [number, number], stations: Station[]): s
   return bestId;
 }
 
+// Нестабильная станция: если голоса по одному из видов топлива 3+ раз меняли
+// направление за последние 3 часа — ситуация неопределённая, не рекомендуем
+export function isStationUnstable(
+  fuelVoteLists: Array<Array<{ value: string; created_at: string }>>,
+  windowHours = 3,
+  minFlips    = 3,
+): boolean {
+  const cutoff = Date.now() - windowHours * 3600 * 1000;
+  for (const votes of fuelVoteLists) {
+    const recent = votes
+      .filter(v => new Date(v.created_at).getTime() >= cutoff)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at));
+    if (recent.length < 3) continue;
+    let flips = 0;
+    for (let i = 1; i < recent.length; i++) {
+      if (recent[i].value !== recent[i - 1].value) flips++;
+    }
+    if (flips >= minFlips) return true;
+  }
+  return false;
+}
+
 export function calcRecommended(
-  center:   [number, number],
-  stations: Station[],
-  votes:    VotesMap,
+  center:      [number, number],
+  stations:    Station[],
+  votes:       VotesMap,
+  unstableIds: Set<string> = new Set(),
 ): string | null {
   if (!stations.length) return null;
-  // Рекомендуем только если есть реальные голоса и станция в 15км
   const MAX_DIST = 15;
   let bestId    = null as string | null;
   let bestScore = -1;
   for (const s of stations) {
+    if (unstableIds.has(s.id)) continue; // нестабильная — не рекомендуем
     const status = getStationStatus(votes[s.id] ?? {});
-    if (status === "neutral") continue; // нет голосов — не рекомендуем
+    if (status === "neutral") continue;
     const dist = haversineKm(center, s.position);
-    if (dist > MAX_DIST) continue; // слишком далеко
+    if (dist > MAX_DIST) continue;
     const score = 0.6 * STATUS_SCORE[status] + 0.4 * (1 / (1 + dist));
     if (score > bestScore) { bestScore = score; bestId = s.id; }
   }
