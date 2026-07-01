@@ -15,6 +15,22 @@ export function voteWeight(createdAt: string): number {
   return Math.exp(-effectiveAge / HALFLIFE_SEC);
 }
 
+type VoteSignal = { value: string; device_id: string; created_at: string };
+
+// Подтверждающий буст: человек проголосовал ПРОТИВ предыдущего сигнала от другого устройства —
+// это значит он реально приехал и проверил. Такой голос весит в 1.5× больше
+export function confirmatoryBoost(groupVotes: VoteSignal[], thisVote: VoteSignal): number {
+  const thisTime  = new Date(thisVote.created_at).getTime();
+  const TWO_HOURS = 2 * 3600 * 1000;
+  const hasOpposite = groupVotes.some(v => {
+    if (v.device_id === thisVote.device_id) return false;
+    if (v.value === thisVote.value) return false;
+    const vTime = new Date(v.created_at).getTime();
+    return vTime < thisTime && (thisTime - vTime) <= TWO_HOURS;
+  });
+  return hasOpposite ? 1.5 : 1.0;
+}
+
 // Boost для кластерных голосов: если несколько человек проголосовали быстро подряд —
 // это сильнее, чем те же голоса, размазанные по часам
 export function velocityBoost(timestamps: string[]): number {
