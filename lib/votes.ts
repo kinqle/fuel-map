@@ -15,6 +15,13 @@ export function voteWeight(createdAt: string): number {
   return Math.exp(-effectiveAge / HALFLIFE_SEC);
 }
 
+// Множитель опыта: чем больше голосов отдало устройство в городе — тем надёжнее его сигналы
+export function experienceMultiplier(voteCount: number): number {
+  if (voteCount < 3)  return 0.8; // новое устройство — осторожнее доверяем
+  if (voteCount < 10) return 1.0; // обычный пользователь
+  return 1.2;                      // опытный — чуть больший вес
+}
+
 type VoteSignal = { value: string; device_id: string; created_at: string };
 
 // Подтверждающий буст: человек проголосовал ПРОТИВ предыдущего сигнала от другого устройства —

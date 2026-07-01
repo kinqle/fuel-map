@@ -14,7 +14,7 @@ import { supabase } from "../lib/supabase";
 import type { Theme, FuelId, VoteValue, Station, City, VotesMap, VoteRow, RecentVote, RecentMap, Filters } from "../lib/types";
 import { CITIES_FALLBACK, FUELS, TILE_URLS, T, DEFAULT_FILTERS, EMPTY_FUEL, RECENT_LIMIT } from "../lib/constants";
 import { getDeviceId, getStoredTheme, haversineKm, formatDist } from "../lib/utils";
-import { voteWeight, velocityBoost, confirmatoryBoost, isStationUnstable, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
+import { voteWeight, velocityBoost, confirmatoryBoost, experienceMultiplier, isStationUnstable, getStationStatus, nearestStation, calcRecommended } from "../lib/votes";
 import { useIsMobile } from "../hooks/useIsMobile";
 import { MapRefCapture, MarkersLayer, MapClickHandler, CityFlyTo, MapMoveHandler } from "../components/MapLayers";
 import { SideControls } from "../components/SideControls";
@@ -226,6 +226,12 @@ export default function MapView() {
       b.created_at.localeCompare(a.created_at)
     );
 
+    // Считаем сколько голосов отдало каждое устройство в этом городе
+    const deviceCounts: Record<string, number> = {};
+    for (const v of sorted) {
+      deviceCounts[v.device_id] = (deviceCounts[v.device_id] ?? 0) + 1;
+    }
+
     // Pre-pass: собираем данные по station+fuel для velocity и confirmatory boost
     const groupMap = new Map<string, Array<{ value: string; device_id: string; created_at: string }>>();
     for (const v of sorted) {
@@ -248,7 +254,8 @@ export default function MapView() {
       const gv     = groupMap.get(`${v.station_id}:${v.fuel}`) ?? [];
       const vBoost = velocityBoost(gv.map(x => x.created_at));
       const cBoost = confirmatoryBoost(gv, { value: v.value, device_id: v.device_id, created_at: v.created_at });
-      const w = voteWeight(v.created_at) * vBoost * cBoost;
+      const eMult  = experienceMultiplier(deviceCounts[v.device_id] ?? 1);
+      const w = voteWeight(v.created_at) * vBoost * cBoost * eMult;
       if (v.value === "yes") { e.yes++; e.yesW += w; }
       else                    { e.no++;  e.noW  += w; }
       if (v.device_id === myId) e.myVote = v.value as VoteValue;
