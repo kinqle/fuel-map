@@ -74,8 +74,7 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
     position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1001,
     background: tk.card, borderRadius: "24px 24px 0 0",
     boxShadow: "0 -4px 40px rgba(0,0,0,0.4)",
-    maxHeight: "82svh", overflowY: "auto",
-    WebkitOverflowScrolling: "touch",
+    maxHeight: "82svh", display: "flex", flexDirection: "column",
   };
   const desktopStyle: React.CSSProperties = {
     position: "fixed", top: 0, left: 0, bottom: 0,
@@ -90,6 +89,10 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
       animate={isMobile ? { y: 0,      opacity: 1 } : { x: 0,    opacity: 1 }}
       exit={   isMobile ? { y: "100%", opacity: 1 } : { x: -320, opacity: 0 }}
       transition={{ type: "spring", damping: 32, stiffness: 320 }}
+      drag={isMobile ? "y" : false}
+      dragConstraints={{ top: 0 }}
+      dragElastic={{ top: 0, bottom: 0.3 }}
+      onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 400) onClose(); }}
       onClick={(e) => e.stopPropagation()}
       className="fm-panel-scroll"
       style={isMobile ? mobileStyle : desktopStyle}
@@ -99,7 +102,7 @@ export function StationSheet({ station, votes, recentVotes, onVote, onClose, vot
           <div style={{ width: 36, height: 4, borderRadius: 2, background: tk.handle }} />
         </div>
       )}
-      <div style={{ padding: isMobile ? "12px 18px calc(24px + env(safe-area-inset-bottom))" : "20px 18px 48px" }}>
+      <div style={isMobile ? { padding: "12px 18px calc(24px + env(safe-area-inset-bottom))", overflowY: "auto", WebkitOverflowScrolling: "touch" as const, flex: 1 } : { padding: "20px 18px 48px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 16 }}>

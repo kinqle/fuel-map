@@ -51,8 +51,8 @@ export function LevelScreen({ theme, isMobile, onClose }: {
 
   const panelStyle: React.CSSProperties = isMobile ? {
     position: "fixed", inset: 0, zIndex: 1002,
-    background: tk.bg, overflowY: "auto",
-    padding: "calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))",
+    background: tk.bg, display: "flex", flexDirection: "column",
+    paddingTop: "env(safe-area-inset-top)",
   } : {
     position: "fixed", left: 0, top: 0, bottom: 0,
     width: 360, zIndex: 1002,
@@ -68,8 +68,18 @@ export function LevelScreen({ theme, isMobile, onClose }: {
       animate={{ opacity: 1, x: 0, y: 0 }}
       exit={{ opacity: 0, x: isMobile ? 0 : -40, y: isMobile ? 40 : 0 }}
       transition={{ type: "spring", stiffness: 340, damping: 32 }}
+      drag={isMobile ? "y" : false}
+      dragConstraints={{ top: 0 }}
+      dragElastic={{ top: 0, bottom: 0.3 }}
+      onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 400) onClose(); }}
       style={panelStyle}
     >
+      {isMobile && (
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: tk.handle }} />
+        </div>
+      )}
+      <div style={isMobile ? { flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" as const, padding: "16px 20px calc(20px + env(safe-area-inset-bottom))" } : {}}>
       {/* Информационная карточка — объяснение системы */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -268,6 +278,7 @@ export function LevelScreen({ theme, isMobile, onClose }: {
       {/* Подпись внизу */}
       <div style={{ marginTop: 28, textAlign: "center", fontSize: 11, color: tk.textSub, opacity: 0.5 }}>
         XP начисляется раз в 8 часов на каждой заправке
+      </div>
       </div>
     </motion.div>
   );

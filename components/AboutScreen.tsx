@@ -12,7 +12,7 @@ export function AboutScreen({ theme, isMobile, onClose }: {
 
   const wrapStyle: React.CSSProperties = isMobile ? {
     position: "fixed", inset: 0, zIndex: 1200,
-    background: tk.card, display: "flex", flexDirection: "column", overflowY: "auto",
+    background: tk.card, display: "flex", flexDirection: "column",
   } : {
     position: "fixed", top: 0, left: 0, bottom: 0, width: 380,
     zIndex: 1200, background: tk.card,
@@ -45,12 +45,21 @@ export function AboutScreen({ theme, isMobile, onClose }: {
       animate={isMobile ? { y: 0 }      : { x: 0 }}
       exit={   isMobile ? { y: "100%" } : { x: -380 }}
       transition={{ type: "spring", damping: 32, stiffness: 320 }}
+      drag={isMobile ? "y" : false}
+      dragConstraints={{ top: 0 }}
+      dragElastic={{ top: 0, bottom: 0.3 }}
+      onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 400) onClose(); }}
       style={wrapStyle}
       onClick={(e) => e.stopPropagation()}
     >
+      {isMobile && (
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: tk.handle }} />
+        </div>
+      )}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: isMobile ? `calc(14px + env(safe-area-inset-top)) 16px 14px` : "24px 20px 20px",
+        padding: isMobile ? `calc(10px + env(safe-area-inset-top)) 16px 14px` : "24px 20px 20px",
         borderBottom: `1px solid ${tk.divider}`, flexShrink: 0,
       }}>
         <img src="/benzok-logo.jpg" alt="БензОК" style={{ height: 40, objectFit: "contain", borderRadius: 8 }} />
@@ -61,7 +70,7 @@ export function AboutScreen({ theme, isMobile, onClose }: {
         }}>✕</button>
       </div>
 
-      <div style={{ padding: isMobile ? "16px 16px" : "24px 20px", flex: 1 }}>
+      <div style={{ padding: isMobile ? "16px 16px" : "24px 20px", flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" as const }}>
         {section("Что такое БензОК?", <>
           {card("⛽", <><strong>БензОК</strong> — народная карта заправок. Водители в реальном времени сообщают, есть ли топливо на АЗС рядом с ними.</>)}
           {card("🗺️", "Открываете карту, выбираете город — и сразу видите, где бензин есть, а где очередь или пусто.")}

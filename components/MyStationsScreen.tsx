@@ -34,12 +34,21 @@ export function MyStationsScreen({ stations, favorites, votes, userPos, theme, i
       animate={isMobile ? { y: 0 }      : { x: 0 }}
       exit={   isMobile ? { y: "100%" } : { x: -340 }}
       transition={{ type: "spring", damping: 32, stiffness: 320 }}
+      drag={isMobile ? "y" : false}
+      dragConstraints={{ top: 0 }}
+      dragElastic={{ top: 0, bottom: 0.3 }}
+      onDragEnd={(_, info) => { if (info.offset.y > 80 || info.velocity.y > 400) onClose(); }}
       style={wrapStyle}
       onClick={(e) => e.stopPropagation()}
     >
+      {isMobile && (
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: tk.handle }} />
+        </div>
+      )}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: isMobile ? `calc(16px + env(safe-area-inset-top)) 20px 16px` : "20px 20px 16px",
+        padding: isMobile ? `16px 20px 16px` : "20px 20px 16px",
         borderBottom: `1px solid ${tk.divider}`,
         flexShrink: 0,
       }}>
