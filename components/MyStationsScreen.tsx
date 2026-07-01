@@ -21,6 +21,7 @@ export function MyStationsScreen({ stations, favorites, votes, userPos, theme, i
   const wrapStyle: React.CSSProperties = isMobile ? {
     position: "fixed", inset: 0, zIndex: 1100,
     background: tk.card, display: "flex", flexDirection: "column",
+    paddingTop: "env(safe-area-inset-top)",
   } : {
     position: "fixed", top: 0, left: 0, bottom: 0, width: 340,
     zIndex: 1100, background: tk.card,
