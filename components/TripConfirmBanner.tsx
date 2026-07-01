@@ -1,17 +1,33 @@
 "use client";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { Theme } from "../lib/types";
+import type { FuelId, Theme } from "../lib/types";
 import { T } from "../lib/constants";
 
-export function TripConfirmBanner({ stationName, theme, isMobile, onYes, onNo, onDismiss }: {
+const FUELS: { id: FuelId; label: string; color: string }[] = [
+  { id: "ai92",   label: "АИ-92", color: "#60a5fa" },
+  { id: "ai95",   label: "АИ-95", color: "#34d399" },
+  { id: "diesel", label: "ДТ",    color: "#fbbf24" },
+];
+
+export function TripConfirmBanner({ stationName, theme, isMobile, onSave, onNone, onDismiss }: {
   stationName: string;
   theme:       Theme;
   isMobile:    boolean;
-  onYes:       () => void;
-  onNo:        () => void;
+  onSave:      (fuels: FuelId[]) => void;
+  onNone:      () => void;
   onDismiss:   () => void;
 }) {
   const tk = T[theme];
+  const [selected, setSelected] = useState<Set<FuelId>>(new Set());
+
+  function toggle(id: FuelId) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   return (
     <motion.div
@@ -34,7 +50,6 @@ export function TripConfirmBanner({ stationName, theme, isMobile, onYes, onNo, o
         padding: "16px 18px",
       }}
     >
-      {/* Кнопка закрыть */}
       <button
         onClick={onDismiss}
         style={{
@@ -47,41 +62,68 @@ export function TripConfirmBanner({ stationName, theme, isMobile, onYes, onNo, o
       >✕</button>
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
-        <span style={{ fontSize: 28, flexShrink: 0 }}>⛽</span>
+        <span style={{ fontSize: 26, flexShrink: 0 }}>⛽</span>
         <div>
           <div style={{ color: tk.text, fontSize: 14, fontWeight: 700, marginBottom: 3 }}>
-            Вы были на АЗС?
+            Вы были у {stationName}?
           </div>
-          <div style={{ color: tk.textSub, fontSize: 12, lineHeight: 1.4 }}>
-            {stationName} — топливо нашли?
+          <div style={{ color: tk.textSub, fontSize: 12 }}>
+            Отметьте что нашли в наличии
           </div>
         </div>
       </div>
 
+      {/* Чипы топлива */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        {FUELS.map(f => {
+          const active = selected.has(f.id);
+          return (
+            <button
+              key={f.id}
+              onClick={() => toggle(f.id)}
+              style={{
+                flex: 1, padding: "10px 0", borderRadius: 12,
+                border: `1.5px solid ${active ? f.color : tk.ctrlBorder}`,
+                background: active ? `${f.color}22` : "transparent",
+                color: active ? f.color : tk.textSub,
+                fontSize: 13, fontWeight: active ? 700 : 500,
+                fontFamily: "inherit", cursor: "pointer",
+                transition: "all 0.12s",
+              }}
+            >
+              {active ? "✓ " : ""}{f.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Кнопки действий */}
       <div style={{ display: "flex", gap: 8 }}>
         <button
-          onClick={onYes}
+          onClick={() => onSave([...selected])}
+          disabled={selected.size === 0}
           style={{
-            flex: 1, padding: "11px 0", borderRadius: 14,
-            border: "1.5px solid rgba(34,197,94,0.3)",
-            background: "rgba(34,197,94,0.15)", color: "#22c55e",
-            fontSize: 13, fontWeight: 700, cursor: "pointer",
-            transition: "background 0.12s",
+            flex: 2, padding: "11px 0", borderRadius: 14,
+            border: `1.5px solid ${selected.size > 0 ? "rgba(34,197,94,0.4)" : tk.ctrlBorder}`,
+            background: selected.size > 0 ? "rgba(34,197,94,0.15)" : "transparent",
+            color: selected.size > 0 ? "#22c55e" : tk.textSub,
+            fontSize: 13, fontWeight: 700, cursor: selected.size > 0 ? "pointer" : "default",
+            fontFamily: "inherit", transition: "all 0.12s",
           }}
         >
-          ✅ Да, есть
+          Сохранить
         </button>
         <button
-          onClick={onNo}
+          onClick={onNone}
           style={{
             flex: 1, padding: "11px 0", borderRadius: 14,
             border: "1.5px solid rgba(239,68,68,0.25)",
-            background: "rgba(239,68,68,0.12)", color: "#ef4444",
-            fontSize: 13, fontWeight: 700, cursor: "pointer",
-            transition: "background 0.12s",
+            background: "rgba(239,68,68,0.08)", color: "#ef4444",
+            fontSize: 12, fontWeight: 600, cursor: "pointer",
+            fontFamily: "inherit", transition: "all 0.12s",
           }}
         >
-          ❌ Нет, пусто
+          Пусто
         </button>
       </div>
     </motion.div>

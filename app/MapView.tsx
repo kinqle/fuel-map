@@ -385,13 +385,17 @@ export default function MapView() {
     setVoting(false);
   }, [voting, selId, loadVotes]);
 
-  const handleTripConfirm = useCallback(async (value: "yes" | "no") => {
+  const handleTripConfirm = useCallback(async (foundFuels: FuelId[], noneFound: boolean) => {
     if (!tripConfirm) return;
     clearPendingTrip();
     setTripConfirm(null);
     const deviceId = getDeviceId();
-    const fuels: FuelId[] = ["ai92", "ai95", "diesel"];
-    await Promise.all(fuels.map(fuel =>
+    const allFuels: FuelId[] = ["ai92", "ai95", "diesel"];
+    const toVote = noneFound
+      ? allFuels.map(fuel => ({ fuel, value: "no" as const }))
+      : foundFuels.map(fuel => ({ fuel, value: "yes" as const }));
+    if (toVote.length === 0) return;
+    await Promise.all(toVote.map(({ fuel, value }) =>
       fetch("/api/votes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -399,7 +403,7 @@ export default function MapView() {
       })
     ));
     await loadVotes(cityRef.current.id, cityRef.current.name);
-    toast.success(value === "yes" ? "Спасибо! Голос учтён" : "Спасибо! Данные обновлены", { duration: 2000 });
+    toast.success("Спасибо! Данные обновлены", { duration: 2000 });
   }, [tripConfirm, loadVotes]);
 
   const applyPosition = useCallback((lat: number, lng: number) => {
@@ -799,8 +803,8 @@ export default function MapView() {
             stationName={tripConfirm.stationName}
             theme={theme}
             isMobile={isMobile}
-            onYes={() => handleTripConfirm("yes")}
-            onNo={() => handleTripConfirm("no")}
+            onSave={(fuels) => handleTripConfirm(fuels, false)}
+            onNone={() => handleTripConfirm([], true)}
             onDismiss={() => { clearPendingTrip(); setTripConfirm(null); }}
           />
         )}
